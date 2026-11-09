@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   try {
     const google = createGoogle({ apiKey });
     const result = streamText({
-      model: google("gemini-2.5-flash"),
+      model: google("gemini-3.8-flash"),
       system: SYSTEM_PROMPT,
       messages: await convertToModelMessages(messages),
       maxOutputTokens: 900,
