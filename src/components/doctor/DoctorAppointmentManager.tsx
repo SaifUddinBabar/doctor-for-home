@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface Appointment {
   id: string;
@@ -33,13 +33,31 @@ export default function DoctorAppointmentManager({
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const fetchAppointments = useCallback(async () => {
     try {
       const res = await fetch("/api/appointments");
-      if (res.ok) {
+      if (res.ok && isMountedRef.current) {
         const data = await res.json();
         if (Array.isArray(data.appointments)) {
-          setAppointments(data.appointments);
+          setAppointments((prev) => {
+            const next = data.appointments;
+            if (
+              prev.length === next.length &&
+              prev.every((p, i) => p.id === next[i]?.id && p.status === next[i]?.status)
+            ) {
+              return prev; // Reference unchanged -> skips re-render!
+            }
+            return next;
+          });
         }
       }
     } catch (err) {
@@ -48,8 +66,8 @@ export default function DoctorAppointmentManager({
   }, []);
 
   useEffect(() => {
-    fetchAppointments();
-    const timer = setInterval(fetchAppointments, 8000);
+    // Only poll periodically, avoid immediate double-rendering on mount
+    const timer = setInterval(fetchAppointments, 10000);
     return () => clearInterval(timer);
   }, [fetchAppointments]);
 
@@ -90,7 +108,7 @@ export default function DoctorAppointmentManager({
     <div className="rounded-2xl border border-white/10 bg-[#0E1733] p-6 shadow-sm">
       <div className="flex items-center justify-between border-b border-white/10 pb-4">
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-[#24D6A0] animate-pulse" />
+          <span className="h-2 w-2 rounded-full bg-[#24D6A0]" />
           <h2 className="text-lg font-bold text-white">Patient Consultation Requests</h2>
           <span className="text-[10px] bg-white/10 text-emerald-300 px-2 py-0.5 rounded-full font-mono">Live Sync</span>
         </div>

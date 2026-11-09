@@ -47,10 +47,26 @@ export default function Navbar() {
   const servicesButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    let isMounted = true;
     fetch("/api/auth/session")
       .then((response) => response.json())
-      .then((data: { user: AuthUser | null }) => setUser(data.user))
-      .catch(() => setUser(null));
+      .then((data: { user: AuthUser | null }) => {
+        if (!isMounted) return;
+        setUser((prev) => {
+          const next = data.user;
+          if (!prev && !next) return null;
+          if (prev && next && prev.id === next.id && prev.role === next.role) {
+            return prev;
+          }
+          return next;
+        });
+      })
+      .catch(() => {
+        if (isMounted) setUser(null);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [pathname]);
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 
 interface Appointment {
@@ -35,7 +35,16 @@ export default function PatientAppointmentManager({ initialAppointments }: { ini
   const [loadingActionId, setLoadingActionId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  // Fetch latest appointments & notifications
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Poll latest appointments & notifications without forcing unnecessary re-renders
   const pollData = useCallback(async () => {
     try {
       const [aptRes, notifRes] = await Promise.all([
@@ -43,17 +52,37 @@ export default function PatientAppointmentManager({ initialAppointments }: { ini
         fetch("/api/notifications"),
       ]);
 
-      if (aptRes.ok) {
+      if (aptRes.ok && isMountedRef.current) {
         const aptData = await aptRes.json();
         if (Array.isArray(aptData.appointments)) {
-          setAppointments(aptData.appointments);
+          setAppointments((prev) => {
+            const next = aptData.appointments;
+            if (
+              prev.length === next.length &&
+              prev.every((p, i) => p.id === next[i]?.id && p.status === next[i]?.status)
+            ) {
+              return prev; // No visual change -> preserve identity to prevent flashing!
+            }
+            return next;
+          });
         }
       }
 
-      if (notifRes.ok) {
+      if (notifRes.ok && isMountedRef.current) {
         const notifData = await notifRes.json();
-        setNotifications(notifData.notifications || []);
-        setUnreadCount(notifData.unreadCount || 0);
+        const incomingNotifs = notifData.notifications || [];
+        setNotifications((prev) => {
+          if (
+            prev.length === incomingNotifs.length &&
+            prev.every((n, i) => n.id === incomingNotifs[i]?.id && n.isRead === incomingNotifs[i]?.isRead)
+          ) {
+            return prev; // No change -> preserve identity!
+          }
+          return incomingNotifs;
+        });
+
+        const newUnread = notifData.unreadCount || 0;
+        setUnreadCount((prev) => (prev === newUnread ? prev : newUnread));
       }
     } catch (err) {
       console.warn("Polling error:", err);
@@ -61,8 +90,8 @@ export default function PatientAppointmentManager({ initialAppointments }: { ini
   }, []);
 
   useEffect(() => {
-    pollData();
-    const interval = setInterval(pollData, 8000);
+    // Only poll periodically, avoid immediate double-rendering on mount
+    const interval = setInterval(pollData, 10000);
     return () => clearInterval(interval);
   }, [pollData]);
 
@@ -116,8 +145,8 @@ export default function PatientAppointmentManager({ initialAppointments }: { ini
       <div className="rounded-2xl border border-white/10 bg-[#0E1733] p-6 shadow-sm">
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[#16C9E8] animate-pulse" />
-            <h2 className="text-lg font-bold text-white">Your Appointments & Consultations</h2>
+            <span className="h-2 w-2 rounded-full bg-[#16C9E8]" />
+            <h2 className="text-lg font-bold text-white">Your Appointments &amp; Consultations</h2>
             <span className="text-[10px] bg-white/10 text-cyan-300 px-2 py-0.5 rounded-full font-mono">Live Sync</span>
           </div>
           <Link href="/find-a-doctor" className="text-xs font-semibold text-[#16C9E8] hover:underline">

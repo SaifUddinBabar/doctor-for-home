@@ -8,9 +8,8 @@ import AdminDoctorVerificationTable from "@/components/admin/AdminDoctorVerifica
 export default async function AdminDashboardPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login?callbackUrl=/dashboard/admin");
-  if (user.role !== "Admin") {
-    redirect("/dashboard");
-  }
+  if (user.role === "Doctor") redirect("/dashboard/doctor");
+  if (user.role !== "Admin") redirect("/dashboard/patient");
 
   // Load real database metrics
   const [

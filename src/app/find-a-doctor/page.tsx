@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -18,10 +18,22 @@ const SORT_OPTIONS: { label: string; value: SortKey }[] = [
   { label: "Most Experienced", value: "experience"  },
 ];
 
+const DEFAULT_SPECIALTIES = [
+  "Cardiology",
+  "Dermatology",
+  "General Physician",
+  "Gynecology",
+  "Neurology",
+  "Orthopedics",
+  "Pediatrics",
+];
+
+const DEFAULT_LOCATIONS = ["Chittagong", "Dhaka", "Sylhet"];
+
 export default function FindADoctorPage() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [allSpecialties, setAllSpecialties] = useState<string[]>([]);
-  const [allLocations, setAllLocations] = useState<string[]>([]);
+  const [allSpecialties, setAllSpecialties] = useState<string[]>(DEFAULT_SPECIALTIES);
+  const [allLocations, setAllLocations] = useState<string[]>(DEFAULT_LOCATIONS);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,9 +43,17 @@ export default function FindADoctorPage() {
   const [sortKey, setSortKey] = useState<SortKey>("rating");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // Fetch doctors dynamically from database API
-  const fetchDoctors = useCallback(async () => {
-    setIsLoading(true);
+  const fetchDoctors = useCallback(async (isInitial = false) => {
+    if (isInitial) setIsLoading(true);
     setError(null);
     try {
       const res = await fetch(`/api/doctors?sort=${sortKey}`);
@@ -41,21 +61,33 @@ export default function FindADoctorPage() {
         throw new Error("Unable to load verified doctors list.");
       }
       const data = await res.json();
-      setDoctors(data.doctors || []);
+      if (!isMountedRef.current) return;
+
+      if (Array.isArray(data.doctors)) {
+        setDoctors(data.doctors);
+      }
       if (data.filterOptions) {
-        setAllSpecialties(data.filterOptions.specialties || []);
-        setAllLocations(data.filterOptions.locations || []);
+        if (Array.isArray(data.filterOptions.specialties) && data.filterOptions.specialties.length > 0) {
+          setAllSpecialties(data.filterOptions.specialties);
+        }
+        if (Array.isArray(data.filterOptions.locations) && data.filterOptions.locations.length > 0) {
+          setAllLocations(data.filterOptions.locations);
+        }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load doctors");
+      if (isMountedRef.current) {
+        setError(err instanceof Error ? err.message : "Failed to load doctors");
+      }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [sortKey]);
 
   useEffect(() => {
-    fetchDoctors();
-  }, [fetchDoctors]);
+    fetchDoctors(doctors.length === 0);
+  }, [fetchDoctors, doctors.length]);
 
   /* ── Toggle helpers ──────────────────────────────────────────────────────── */
   const toggleSpecialty = useCallback((val: string) => {
@@ -76,7 +108,7 @@ export default function FindADoctorPage() {
     setQuery("");
   }, []);
 
-  /* ── Filtered + sorted doctor list ──────────────────────────────────────── */
+  /* ── Filtered + sorted doctor list (instant client-side sort & filter) ──── */
   const filteredDoctors = useMemo(() => {
     const q = query.toLowerCase().trim();
 
@@ -95,7 +127,7 @@ export default function FindADoctorPage() {
           selectedSpecialties.length === 0 || selectedSpecialties.includes(d.specialty);
 
         const matchLocation =
-          selectedLocations.length === 0 || selectedLocations.includes(d.location);
+          selectedLocations.length === 0 || (d.location && selectedLocations.includes(d.location));
 
         return matchQuery && matchSpecialty && matchLocation;
       })
@@ -130,11 +162,11 @@ export default function FindADoctorPage() {
               <div>
                 <h1 className="text-3xl md:text-4xl font-extrabold mb-2">Find a Doctor</h1>
                 <p className="text-blue-200 text-base md:text-lg max-w-xl">
-                  Connect with BMDC-verified certified medical practitioners for home visits & video consultations.
+                  Connect with BMDC-verified certified medical practitioners for home visits &amp; video consultations.
                 </p>
               </div>
               <div className="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20">
-                <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
+                <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full" />
                 <span className="text-sm font-semibold text-emerald-300">Live Database Verified</span>
               </div>
             </div>
@@ -270,8 +302,8 @@ export default function FindADoctorPage() {
                 </div>
               )}
 
-              {/* Loading State */}
-              {isLoading && (
+              {/* Initial Loading Skeleton (only on very first load when zero doctors exist) */}
+              {isLoading && doctors.length === 0 && (
                 <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {[1, 2, 3, 4, 5, 6].map((n) => (
                     <div key={n} className="bg-white rounded-2xl border border-slate-100 p-6 animate-pulse">
@@ -293,7 +325,7 @@ export default function FindADoctorPage() {
               )}
 
               {/* Error State */}
-              {!isLoading && error && (
+              {!isLoading && error && doctors.length === 0 && (
                 <div className="bg-white rounded-2xl border border-red-100 shadow-sm py-16 text-center p-6">
                   <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -303,7 +335,7 @@ export default function FindADoctorPage() {
                   <h3 className="text-lg font-bold text-slate-800 mb-2">Unable to Load Doctors</h3>
                   <p className="text-slate-500 text-sm mb-6 max-w-sm mx-auto">{error}</p>
                   <button
-                    onClick={fetchDoctors}
+                    onClick={() => fetchDoctors(true)}
                     className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-6 py-2.5 rounded-xl shadow-sm transition"
                   >
                     Retry Connection
@@ -312,7 +344,7 @@ export default function FindADoctorPage() {
               )}
 
               {/* Grid or Empty */}
-              {!isLoading && !error && filteredDoctors.length > 0 && (
+              {filteredDoctors.length > 0 && (
                 <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {filteredDoctors.map((doctor, idx) => (
                     <DoctorCard key={String(doctor.id)} doctor={doctor} index={idx} />
@@ -320,7 +352,7 @@ export default function FindADoctorPage() {
                 </div>
               )}
 
-              {!isLoading && !error && filteredDoctors.length === 0 && (
+              {!isLoading && filteredDoctors.length === 0 && (
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm py-20 text-center">
                   <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-5">
                     <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

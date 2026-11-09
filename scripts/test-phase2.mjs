@@ -227,6 +227,15 @@ async function runPhase2Tests() {
     assert(unavailableDayRes.status === 400, "Booking on day doctor does not practice (Sunday) is rejected with 400");
 
     // D) Valid booking on an allowed day (2026-11-16 is a Monday)
+    // Clean up any appointment from previous test runs to allow idempotent re-testing
+    await prisma.appointment.deleteMany({
+      where: {
+        doctorId: docProfileData.profile.id,
+        scheduledDate: "2026-11-16",
+        scheduledTime: "10:00",
+      },
+    });
+
     const validBookingRes = await fetch(`${BASE_URL}/api/bookings`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Cookie: patientLogin.cookie },
