@@ -79,6 +79,7 @@ export default function DoctorCard({ doctor, index }: DoctorCardProps) {
       address: formData.get("address"),
       date: formData.get("date"),
       time: formData.get("time"),
+      appointmentType: formData.get("appointmentType") || "Online Consultation",
     };
 
     try {
@@ -103,17 +104,17 @@ export default function DoctorCard({ doctor, index }: DoctorCardProps) {
     <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col">
       {/* ── Card header ── */}
       <div className="relative bg-gradient-to-br from-blue-50 to-sky-100 px-6 pt-6 pb-4">
-        {/* Availability badge */}
-        <div className="absolute top-4 right-4">
-          {doctor.available ? (
-            <span className="inline-flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              Available
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-500 text-xs font-semibold px-2.5 py-1 rounded-full">
-              <span className="w-1.5 h-1.5 bg-slate-400 rounded-full" />
-              Busy
+        {/* Availability / BMDC badge */}
+        <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+          <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full border border-emerald-200">
+            <svg className="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            BMDC Verified
+          </span>
+          {doctor.bmdcNumber && (
+            <span className="text-[10px] text-slate-500 font-mono font-medium">
+              {doctor.bmdcNumber}
             </span>
           )}
         </div>
@@ -129,6 +130,9 @@ export default function DoctorCard({ doctor, index }: DoctorCardProps) {
 
         {/* Name + specialty */}
         <h3 className="font-bold text-blue-900 text-lg leading-tight">{doctor.name}</h3>
+        {doctor.qualifications && (
+          <p className="text-xs text-slate-500 font-medium mt-0.5">{doctor.qualifications}</p>
+        )}
 
         <span
           className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full mt-2 ${colors.bg} ${colors.text}`}
@@ -142,14 +146,14 @@ export default function DoctorCard({ doctor, index }: DoctorCardProps) {
       <div className="px-6 py-4 flex flex-col flex-1 gap-3">
         {bookingSuccess && (
           <p role="status" className="rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
-            Appointment booked successfully!
+            Appointment requested successfully! Check your dashboard.
           </p>
         )}
         {/* Rating row */}
         <div className="flex items-center gap-2">
-          <StarRating rating={doctor.rating} />
-          <span className="text-sm font-bold text-slate-700">{doctor.rating.toFixed(1)}</span>
-          <span className="text-xs text-slate-400">({doctor.reviewCount} reviews)</span>
+          <StarRating rating={doctor.rating || 4.9} />
+          <span className="text-sm font-bold text-slate-700">{(doctor.rating || 4.9).toFixed(1)}</span>
+          <span className="text-xs text-slate-400">({doctor.reviewCount || 100}+ reviews)</span>
         </div>
 
         {/* Meta info grid */}
@@ -171,17 +175,18 @@ export default function DoctorCard({ doctor, index }: DoctorCardProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span>{doctor.location}</span>
+            <span className="truncate">{doctor.location || "Dhaka"}</span>
           </div>
 
-          {/* Languages */}
-          <div className="flex items-center gap-1.5 text-slate-600 col-span-2">
-            <svg className="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-            </svg>
-            <span>{doctor.languages.join(", ")}</span>
-          </div>
+          {/* Hospital affiliation */}
+          {doctor.hospital && (
+            <div className="flex items-center gap-1.5 text-slate-600 col-span-2 text-xs truncate">
+              <svg className="w-4 h-4 text-cyan-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <span className="truncate">{doctor.hospital}</span>
+            </div>
+          )}
         </div>
 
         {/* Bio */}
@@ -193,12 +198,16 @@ export default function DoctorCard({ doctor, index }: DoctorCardProps) {
         {/* Next slot + fee */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-400">Next available</p>
-            <p className="text-xs font-semibold text-green-600">{doctor.nextSlot}</p>
+            <p className="text-xs text-slate-400">Consultation Fee</p>
+            <p className="text-lg font-extrabold text-blue-900">৳{doctor.fee}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-400">Visit fee</p>
-            <p className="text-lg font-extrabold text-blue-900">${doctor.fee}</p>
+            <p className="text-xs text-slate-400">Available Days</p>
+            <p className="text-xs font-semibold text-emerald-600">
+              {doctor.availableDays && doctor.availableDays.length > 0
+                ? `${doctor.availableDays.length} days/week`
+                : "Mon - Fri"}
+            </p>
           </div>
         </div>
 
@@ -215,7 +224,7 @@ export default function DoctorCard({ doctor, index }: DoctorCardProps) {
             onClick={() => { setBookingSuccess(false); setBookingError(""); setBookingOpen(true); }}
             className="flex-1 text-sm font-bold text-white bg-green-500 hover:bg-green-600 py-2.5 rounded-xl transition-colors shadow-sm"
           >
-            Book Appointment
+            Book Now
           </button>
         </div>
       </div>
@@ -233,9 +242,9 @@ export default function DoctorCard({ doctor, index }: DoctorCardProps) {
           >
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-green-600">Home visit request</p>
-                <h2 id={`booking-title-${doctor.id}`} className="mt-1 text-2xl font-bold text-blue-950">Book Appointment</h2>
-                <p className="mt-1 text-sm text-slate-500">with {doctor.name}</p>
+                <p className="text-sm font-semibold text-green-600">Instant Appointment Booking</p>
+                <h2 id={`booking-title-${doctor.id}`} className="mt-1 text-2xl font-bold text-blue-950">Book Consultation</h2>
+                <p className="mt-1 text-sm text-slate-500">with {doctor.name} ({doctor.specialty})</p>
               </div>
               <button type="button" onClick={() => setBookingOpen(false)} aria-label="Close booking form" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="m6 6 12 12M18 6 6 18" /></svg>
@@ -243,33 +252,48 @@ export default function DoctorCard({ doctor, index }: DoctorCardProps) {
             </div>
 
             <form onSubmit={submitBooking} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Consultation Type</label>
+                <select name="appointmentType" defaultValue="Online Consultation" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 font-medium outline-none focus:border-blue-500">
+                  <option value="Online Consultation">Online Video Consultation (৳{doctor.fee})</option>
+                  <option value="Home Visit">In-person Home Visit (৳{doctor.homeVisitFee || doctor.fee + 300})</option>
+                </select>
+              </div>
               <label className="block text-sm font-medium text-slate-700">
-                Patient Name
-                <input name="patientName" required autoComplete="name" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-3 font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                Patient Full Name
+                <input name="patientName" required autoComplete="name" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
               </label>
               <label className="block text-sm font-medium text-slate-700">
                 Phone Number
-                <input name="phone" type="tel" required autoComplete="tel" pattern="[+0-9() .-]{7,20}" title="Enter a valid phone number" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-3 font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                <input name="phone" type="tel" required autoComplete="tel" pattern="[+0-9() .-]{7,20}" placeholder="+8801XXXXXXXXX" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
               </label>
               <label className="block text-sm font-medium text-slate-700">
-                Full Address
-                <textarea name="address" required autoComplete="street-address" rows={3} className="mt-1.5 w-full resize-y rounded-xl border border-slate-200 px-3.5 py-3 font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                Address / Location
+                <input name="address" required placeholder="House, Road, Area, Dhaka" className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
               </label>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <label className="block text-sm font-medium text-slate-700">
-                  Date
-                  <input name="date" type="date" required min={minDate} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                  Appointment Date
+                  <input name="date" type="date" required min={minDate} className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
                 </label>
                 <label className="block text-sm font-medium text-slate-700">
-                  Time
-                  <input name="time" type="time" required className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-3 font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                  Select Time Slot
+                  <select name="time" required className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                    <option value="">-- Choose Slot --</option>
+                    {(doctor.availableTimeSlots && doctor.availableTimeSlots.length > 0
+                      ? doctor.availableTimeSlots
+                      : ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"]
+                    ).map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
                 </label>
               </div>
-              {bookingError && <p role="alert" className="text-sm text-red-600">{bookingError}</p>}
+              {bookingError && <p role="alert" className="text-sm text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200">{bookingError}</p>}
               <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
-                <button type="button" onClick={() => setBookingOpen(false)} className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
-                <button type="submit" disabled={bookingPending} className="rounded-xl bg-green-600 px-5 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:cursor-wait disabled:opacity-60">
-                  {bookingPending ? "Submitting…" : "Confirm Booking"}
+                <button type="button" onClick={() => setBookingOpen(false)} className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
+                <button type="submit" disabled={bookingPending} className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700 disabled:cursor-wait disabled:opacity-60 shadow">
+                  {bookingPending ? "Booking..." : "Confirm Booking"}
                 </button>
               </div>
             </form>

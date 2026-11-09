@@ -19,6 +19,10 @@ model User {
   resetPasswordExpires DateTime?
   phone                String?
   avatar               String?
+  otpHash              String?
+  otpExpires           DateTime?
+  otpAttempts          Int             @default(0)
+  otpLastSent          DateTime?
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 
@@ -61,7 +65,13 @@ model DoctorProfile {
   homeVisitFee         Float?
   bio                  String?
   hospitalAffiliation  String?
-  verificationStatus   String         @default("PENDING") // PENDING | APPROVED | REJECTED | SUSPENDED
+  location             String?
+  avatar               String?
+  availableDays        String?         // JSON array of strings e.g. ["Monday","Tuesday","Wednesday","Thursday","Friday"]
+  availableTimeSlots   String?         // JSON array of strings e.g. ["09:00","10:00","11:00","14:00","15:00","16:00"]
+  slotDurationMinutes  Int             @default(30)
+  blockedDates         String?         // JSON array of date strings e.g. ["2026-12-25"]
+  verificationStatus   String          @default("PENDING") // PENDING | APPROVED | REJECTED | SUSPENDED
   verificationNotes    String?
   certificateUrl       String?
   availabilitySchedule String?

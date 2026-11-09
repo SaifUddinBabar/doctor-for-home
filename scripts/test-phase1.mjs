@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
+process.env.DATABASE_URL = process.env.DATABASE_URL || "file:./dev.db";
 const prisma = new PrismaClient();
 const BASE_URL = "http://localhost:3000";
 
@@ -167,6 +168,10 @@ async function runTests() {
 
   // TEST 7: Appointment Database Persistence
   console.log("\n--- 7. Testing Appointment Persistence in Database ---");
+  // Clean up any existing test appointment on that date/time to avoid intentional conflict check
+  await prisma.appointment.deleteMany({
+    where: { scheduledDate: "2026-11-20", scheduledTime: "15:00" },
+  });
   const bookingRes = await fetch(`${BASE_URL}/api/bookings`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
