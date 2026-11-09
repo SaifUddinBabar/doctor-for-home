@@ -21,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased font-sans bg-white text-slate-800">
+      <body className="antialiased font-sans bg-[#080D23] text-white">
         {children}
         <ChatWidget />
       </body>

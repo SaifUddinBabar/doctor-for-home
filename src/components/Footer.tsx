@@ -1,71 +1,68 @@
 import Link from "next/link";
 
-const footerLinks = {
-  Company: ["About Us", "Careers", "Press", "Blog"],
-  Services: ["General Physician", "Pediatrics", "Cardiology", "All Specialties"],
-  Support: ["Help Center", "Contact Us", "Privacy Policy", "Terms of Service"],
-};
+const quickLinks = [
+  { label: "About Us", href: "/#about" },
+  { label: "Services", href: "/#platform-features" },
+  { label: "Doctors", href: "/find-a-doctor" },
+  { label: "Book Appointment", href: "/#appointment" },
+];
+
+const serviceLinks = [
+  { label: "Video Consultation", href: "/#appointment" },
+  { label: "Home Visit", href: "/#appointment" },
+  { label: "Lab Tests", href: "/#appointment" },
+  { label: "Health Checkup", href: "/#appointment" },
+];
+
+function BrandMark() {
+  return (
+    <span className="flex items-center gap-3">
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#16C9E8] via-[#398BF2] to-[#9560F5]">
+        <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5 text-white" stroke="currentColor" strokeWidth={1.9} aria-hidden="true"><path d="M12 5v14M5 12h14" strokeLinecap="round" /><circle cx="12" cy="12" r="9" /></svg>
+      </span>
+      <span><span className="block text-[16px] font-bold text-white">Doctor<span className="text-[#65DFF0]">For</span>Home</span><span className="mt-1 block text-[8px] font-semibold tracking-[.18em] text-[#7C8AA2]">HEALTHCARE REIMAGINED</span></span>
+    </span>
+  );
+}
 
 export default function Footer() {
   return (
-    <footer className="bg-blue-900 text-blue-200">
-      {/* ── Main footer grid ── */}
-      <div className="max-w-6xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-4 gap-10">
-        {/* Brand column */}
+    <footer id="contact" className="relative bg-[#060A1A]">
+      <div className="h-[2px] bg-gradient-to-r from-[#16C9E8] via-[#9560F5] to-[#DF48C7]" />
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-5 py-14 sm:px-8 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr] lg:gap-8 lg:py-16 xl:px-10">
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-green-400 rounded-xl flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" stroke="white" strokeWidth={2.5}>
-                <path d="M12 7v10M7 12h10" strokeLinecap="round" />
-              </svg>
-            </div>
-            <span className="font-extrabold text-xl text-white">
-              Doctors<span className="text-green-400">4Home</span>
-            </span>
-          </div>
-          <p className="text-sm leading-relaxed mb-5 text-blue-300">
-            Bringing world-class healthcare to your doorstep. Certified doctors, same-day visits.
-          </p>
-          {/* Social icons */}
-          <div className="flex gap-3">
-            {["twitter", "facebook", "instagram", "linkedin"].map((s) => (
-              <Link
-                key={s}
-                href="#"
-                className="w-9 h-9 bg-blue-800 hover:bg-blue-700 rounded-lg flex items-center justify-center transition-colors"
-                aria-label={s}
-              >
-                <span className="text-xs font-bold text-blue-300 capitalize">{s[0].toUpperCase()}</span>
-              </Link>
-            ))}
-          </div>
+          <Link href="/" aria-label="DoctorForHome home"><BrandMark /></Link>
+          <p className="mt-5 max-w-xs text-xs leading-6 text-[#8996AB]">Revolutionizing healthcare with technology and compassion for a healthier tomorrow.</p>
         </div>
 
-        {/* Link columns */}
-        {Object.entries(footerLinks).map(([heading, links]) => (
-          <div key={heading}>
-            <h4 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">{heading}</h4>
-            <ul className="space-y-2.5">
-              {links.map((link) => (
-                <li key={link}>
-                  <Link href="#" className="text-sm text-blue-300 hover:text-white transition-colors">
-                    {link}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-[.13em] text-white">Quick Links</h2>
+          <ul className="mt-5 space-y-3">
+            {quickLinks.map((link) => <li key={link.label}><Link className="text-xs text-[#8996AB] transition hover:text-[#50D8EA]" href={link.href}>{link.label}</Link></li>)}
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-[.13em] text-white">Services</h2>
+          <ul className="mt-5 space-y-3">
+            {serviceLinks.map((link) => <li key={link.label}><Link className="text-xs text-[#8996AB] transition hover:text-[#50D8EA]" href={link.href}>{link.label}</Link></li>)}
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-[.13em] text-white">Contact Us</h2>
+          <p className="mt-5 text-xs leading-6 text-[#8996AB]">For appointments, browse available doctors or send a request using the booking form.</p>
+          <div className="mt-4 flex flex-col items-start gap-3">
+            <Link href="/find-a-doctor" className="inline-flex items-center gap-2 text-xs font-semibold text-[#50D8EA] transition hover:text-white">Find a Doctor <span aria-hidden="true">→</span></Link>
+            <Link href="/#appointment" className="inline-flex items-center gap-2 text-xs font-semibold text-[#50D8EA] transition hover:text-white">Request an Appointment <span aria-hidden="true">→</span></Link>
           </div>
-        ))}
+        </div>
       </div>
 
-      {/* ── Bottom bar ── */}
-      <div className="border-t border-blue-800">
-        <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-blue-400">
-          <p>© 2026 Doctors4Home, Inc. All rights reserved.</p>
-          <div className="flex items-center gap-1 text-blue-300">
-            <span className="w-2 h-2 bg-green-400 rounded-full" />
-            All systems operational
-          </div>
+      <div className="border-t border-white/[.07]">
+        <div className="mx-auto flex max-w-[1200px] flex-col items-center justify-between gap-3 px-5 py-5 text-center sm:px-8 md:flex-row md:text-left xl:px-10">
+          <p className="text-[10px] text-[#738098]">© 2026 DoctorForHome. All rights reserved.</p>
+          <p className="text-[10px] text-[#65728A]">DoctorForHome provides general health information and appointment requests. It does not replace emergency or professional care.</p>
         </div>
       </div>
     </footer>

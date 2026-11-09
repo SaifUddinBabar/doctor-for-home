@@ -1,22 +1,50 @@
 "use client";
+
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import type { AuthUser } from "@/lib/auth";
 
-const NAV_LINKS = [
-  { label: "Services",        href: "/#services"       },
-  { label: "Find a Doctor",   href: "/find-a-doctor"   },
-  { label: "How It Works",    href: "/#how-it-works"   },
-  { label: "About",           href: "/#about"          },
+const services = [
+  { title: "Video Consultation", description: "Connect with a doctor online", icon: "video" },
+  { title: "Home Visit", description: "Doctor at your doorstep", icon: "home" },
+  { title: "Lab Tests", description: "Request diagnostic services", icon: "lab" },
+  { title: "Health Checkup", description: "Plan a wellness visit", icon: "health" },
 ];
+
+function BrandMark({ compact = false }: { compact?: boolean }) {
+  return (
+    <span className="flex items-center gap-3">
+      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#16C9E8] via-[#398BF2] to-[#9560F5] shadow-[0_8px_28px_rgba(57,139,242,.28)]">
+        <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 text-white" stroke="currentColor" strokeWidth={1.9} aria-hidden="true">
+          <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+          <path d="M19.5 12a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" />
+        </svg>
+      </span>
+      <span className="flex flex-col leading-none">
+        <span className="text-[17px] font-bold tracking-tight text-white">Doctor<span className="text-[#65DFF0]">For</span>Home</span>
+        {!compact && <span className="mt-1.5 text-[9px] font-semibold tracking-[.2em] text-[#8794AD]">HEALTHCARE REIMAGINED</span>}
+      </span>
+    </span>
+  );
+}
+
+function ServiceIcon({ kind }: { kind: string }) {
+  const common = { className: "h-5 w-5", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true as const };
+  if (kind === "video") return <svg {...common}><rect x="3" y="6" width="13" height="12" rx="2" /><path d="m16 10 5-3v10l-5-3z" /></svg>;
+  if (kind === "home") return <svg {...common}><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1z" /></svg>;
+  if (kind === "lab") return <svg {...common}><path d="M8 3h8M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3M8 15h8" /></svg>;
+  return <svg {...common}><path d="M8 4h8v4a4 4 0 0 1-8 0zM12 12v3a4 4 0 0 0 4 4h1M17 19h3" /><path d="M8 6H5v2a4 4 0 0 0 4 4M16 6h3v2a4 4 0 0 1-4 4" /></svg>;
+}
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const servicesRef = useRef<HTMLDivElement>(null);
+  const servicesButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     fetch("/api/auth/session")
@@ -24,6 +52,24 @@ export default function Navbar() {
       .then((data: { user: AuthUser | null }) => setUser(data.user))
       .catch(() => setUser(null));
   }, [pathname]);
+
+  useEffect(() => {
+    function onPointerDown(event: PointerEvent) {
+      if (servicesRef.current && !servicesRef.current.contains(event.target as Node)) setServicesOpen(false);
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && servicesOpen) {
+        setServicesOpen(false);
+        servicesButtonRef.current?.focus();
+      }
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [servicesOpen]);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -33,126 +79,91 @@ export default function Navbar() {
     router.refresh();
   }
 
+  function closeMenus() {
+    setMenuOpen(false);
+    setServicesOpen(false);
+  }
+
+  const navLinkClass = "rounded-full px-3.5 py-2 text-[13px] font-medium text-[#B9C4D7] transition-colors hover:bg-white/[.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16C9E8]";
+
   return (
-    <nav className="bg-white/95 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-        {/* ── Logo ── */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" stroke="white" strokeWidth={2.5}>
-              <path d="M12 7v10M7 12h10" strokeLinecap="round" />
-            </svg>
+    <header className="sticky top-0 z-50 border-b border-white/[.07] bg-[#080D23]/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-[78px] max-w-[1320px] items-center justify-between px-5 sm:px-8 xl:px-10">
+        <Link href="/" aria-label="DoctorForHome home" className="shrink-0"><BrandMark /></Link>
+
+        <nav aria-label="Main navigation" className="hidden items-center gap-1 lg:flex">
+          <Link href="/" className={navLinkClass}>Home</Link>
+          <div ref={servicesRef} className="relative" onMouseEnter={() => setServicesOpen(true)} onMouseLeave={() => setServicesOpen(false)}>
+            <button
+              ref={servicesButtonRef}
+              type="button"
+              aria-haspopup="true"
+              aria-expanded={servicesOpen}
+              onClick={() => setServicesOpen((value) => !value)}
+              onFocus={() => setServicesOpen(true)}
+              className={`${navLinkClass} inline-flex items-center gap-1.5`}
+            >
+              Services
+              <svg className={`h-3.5 w-3.5 transition-transform ${servicesOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" /></svg>
+            </button>
+            {servicesOpen && (
+              <div className="services-menu absolute left-1/2 top-[calc(100%+17px)] w-[390px] -translate-x-1/2 overflow-hidden rounded-2xl border border-white/10 bg-[#0B142A]/[.98] p-2 shadow-[0_24px_70px_rgba(0,0,0,.55)] animate-menu-in">
+                <div className="grid grid-cols-2 gap-1">
+                  {services.map((service) => (
+                    <Link
+                      key={service.title}
+                      href="/#appointment"
+                      onClick={closeMenus}
+                      className="group flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-white/[.06] focus-visible:bg-white/[.06] focus-visible:outline-none"
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#398BF2]/15 bg-gradient-to-br from-[#14274D] to-[#21183F] text-[#34D7EC] transition-colors group-hover:text-white"><ServiceIcon kind={service.icon} /></span>
+                      <span className="min-w-0">
+                        <span className="block text-[12px] font-semibold text-white">{service.title}</span>
+                        <span className="mt-1 block text-[10px] text-[#8794AD]">{service.description}</span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+                <div className="mt-2 h-[2px] rounded-full bg-gradient-to-r from-[#16C9E8] via-[#9560F5] to-[#DF48C7]" />
+              </div>
+            )}
           </div>
-          <span className="font-extrabold text-xl text-blue-900">
-            Doctors<span className="text-green-500">4Home</span>
-          </span>
-        </Link>
+          <Link href="/find-a-doctor" className={navLinkClass}>Doctors</Link>
+          <Link href="/#about" className={navLinkClass}>About Us</Link>
+          <Link href="/#contact" className={navLinkClass}>Contact</Link>
+          <Link href="/#emergency" className="ml-1 rounded-full border border-[#24D6A0]/20 bg-[#24D6A0]/[.08] px-3.5 py-2 text-[12px] font-semibold text-[#5FE7B9] transition hover:bg-[#24D6A0]/[.16] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#24D6A0]">Emergency contact</Link>
+        </nav>
 
-        {/* ── Desktop nav links ── */}
-        <div className="hidden md:flex items-center gap-1 text-sm font-medium">
-          {NAV_LINKS.map(({ label, href }) => {
-            const isActive = href === "/find-a-doctor"
-              ? pathname === "/find-a-doctor"
-              : false;
-            return (
-              <Link
-                key={label}
-                href={href}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  isActive
-                    ? "bg-blue-50 text-blue-700 font-semibold"
-                    : "text-slate-600 hover:text-blue-600 hover:bg-slate-50"
-                }`}
-              >
-                {label}
-                {label === "Find a Doctor" && (
-                  <span className="ml-1.5 inline-block bg-green-100 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none align-middle">
-                    NEW
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* ── CTA buttons ── */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden items-center gap-4 lg:flex">
           {user ? (
             <>
-              <Link href="/dashboard" className="text-sm font-semibold text-blue-700 hover:text-blue-900">{user.name}</Link>
-              <button type="button" onClick={logout} className="text-sm font-semibold text-slate-500 hover:text-slate-800">Logout</button>
+              <Link href="/dashboard" className="max-w-28 truncate text-[13px] font-medium text-[#B9C4D7] hover:text-white">{user.name}</Link>
+              <button type="button" onClick={logout} className="text-[13px] font-medium text-[#B9C4D7] hover:text-white">Logout</button>
             </>
-          ) : (
-            <Link href="/login" className="text-sm font-semibold text-blue-700 hover:text-blue-900 transition-colors">Login</Link>
-          )}
-          <Link
-            href="#book"
-            className="bg-green-500 hover:bg-green-600 text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all shadow-sm hover:shadow-md"
-          >
-            Book Now
-          </Link>
+          ) : <Link href="/login" className="text-[13px] font-medium text-[#B9C4D7] transition hover:text-white">Login</Link>}
+          <Link href="/#appointment" className="rounded-full bg-gradient-to-r from-[#16C9E8] via-[#398BF2] to-[#9560F5] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_8px_28px_rgba(57,139,242,.25)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(57,139,242,.35)]">Book Now</Link>
         </div>
 
-        {/* ── Mobile hamburger ── */}
-        <button
-          className="md:hidden text-slate-700 p-1"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {menuOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
+        <button type="button" className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 text-white hover:bg-white/[.06] lg:hidden" onClick={() => setMenuOpen((value) => !value)} aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={menuOpen}>
+          {menuOpen ? <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg> : <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>}
         </button>
       </div>
 
-      {/* ── Mobile menu ── */}
       {menuOpen && (
-        <div className="md:hidden bg-white border-t border-slate-100 px-6 py-4 flex flex-col gap-1 shadow-lg">
-          {NAV_LINKS.map(({ label, href }) => {
-            const isActive = href === "/find-a-doctor" ? pathname === "/find-a-doctor" : false;
-            return (
-              <Link
-                key={label}
-                href={href}
-                onClick={() => setMenuOpen(false)}
-                className={`text-sm font-medium px-4 py-3 rounded-xl transition-colors flex items-center gap-2 ${
-                  isActive
-                    ? "bg-blue-50 text-blue-700 font-semibold"
-                    : "text-slate-700 hover:bg-slate-50 hover:text-blue-600"
-                }`}
-              >
-                {label}
-                {label === "Find a Doctor" && (
-                  <span className="bg-green-100 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                    NEW
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-          <div className="pt-3 border-t border-slate-100 mt-2">
-            {user ? (
-              <>
-                <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-sm font-semibold text-blue-700">{user.name} · Dashboard</Link>
-                <button type="button" onClick={logout} className="w-full px-4 py-3 text-left text-sm font-semibold text-slate-600">Logout</button>
-              </>
-            ) : (
-              <Link href="/login" onClick={() => setMenuOpen(false)} className="mb-2 block rounded-xl border border-blue-100 py-3 text-center text-sm font-bold text-blue-700">Login / Sign up</Link>
-            )}
-            <Link
-              href="/find-a-doctor"
-              className="block bg-green-500 text-white font-bold py-3 rounded-xl text-center text-sm"
-              onClick={() => setMenuOpen(false)}
-            >
-              Book a Home Visit
-            </Link>
+        <nav aria-label="Mobile navigation" className="border-t border-white/[.07] bg-[#0B142A] px-5 pb-5 pt-3 shadow-xl lg:hidden">
+          <Link href="/" onClick={closeMenus} className="mobile-nav-link">Home</Link>
+          <button type="button" onClick={() => setServicesOpen((value) => !value)} aria-expanded={servicesOpen} className="mobile-nav-link flex w-full items-center justify-between">Services<span className="text-[#8995AA]">{servicesOpen ? "−" : "+"}</span></button>
+          {servicesOpen && <div className="mb-2 grid grid-cols-2 gap-2 px-2 pb-2">{services.map((service) => <Link key={service.title} href="/#appointment" onClick={closeMenus} className="rounded-xl border border-white/[.07] bg-white/[.03] p-3 text-xs font-semibold text-[#C4D0E2]">{service.title}<span className="mt-1 block text-[10px] font-normal text-[#8492AA]">{service.description}</span></Link>)}</div>}
+          <Link href="/find-a-doctor" onClick={closeMenus} className="mobile-nav-link">Doctors</Link>
+          <Link href="/#about" onClick={closeMenus} className="mobile-nav-link">About Us</Link>
+          <Link href="/#contact" onClick={closeMenus} className="mobile-nav-link">Contact</Link>
+          <Link href="/#emergency" onClick={closeMenus} className="mobile-nav-link text-[#5FE7B9]">Emergency contact</Link>
+          <div className="mt-3 flex gap-3 border-t border-white/[.07] pt-4">
+            {user ? <><Link href="/dashboard" onClick={closeMenus} className="mobile-nav-link flex-1">{user.name}</Link><button type="button" onClick={logout} className="rounded-xl border border-white/10 px-4 text-sm text-[#C4D0E2]">Logout</button></> : <Link href="/login" onClick={closeMenus} className="mobile-nav-link flex-1 text-center">Login</Link>}
+            <Link href="/#appointment" onClick={closeMenus} className="flex-1 rounded-xl bg-gradient-to-r from-[#16C9E8] to-[#9560F5] px-4 py-3 text-center text-sm font-bold text-white">Book Now</Link>
           </div>
-        </div>
+        </nav>
       )}
-    </nav>
+    </header>
   );
 }
