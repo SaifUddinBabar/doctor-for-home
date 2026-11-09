@@ -1,5 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { prisma } from "@/lib/prisma";
 import type { UserRole } from "@/lib/auth";
 
 export interface StoredUser {
@@ -10,18 +9,40 @@ export interface StoredUser {
   passwordHash: string;
 }
 
-const usersFile = path.join(process.cwd(), "data", "users.json");
-
 export async function getUsers(): Promise<StoredUser[]> {
   try {
-    return JSON.parse(await readFile(usersFile, "utf8")) as StoredUser[];
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        passwordHash: true,
+      },
+    });
+    return users as StoredUser[];
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
-    throw error;
+    console.error("Error fetching users from Prisma:", error);
+    return [];
   }
 }
 
-export async function saveUsers(users: StoredUser[]) {
-  await mkdir(path.dirname(usersFile), { recursive: true });
-  await writeFile(usersFile, `${JSON.stringify(users, null, 2)}\n`, "utf8");
+export async function findUserByEmail(email: string) {
+  return prisma.user.findUnique({
+    where: { email: email.trim().toLowerCase() },
+    include: {
+      patientProfile: true,
+      doctorProfile: true,
+    },
+  });
+}
+
+export async function findUserById(id: string) {
+  return prisma.user.findUnique({
+    where: { id },
+    include: {
+      patientProfile: true,
+      doctorProfile: true,
+    },
+  });
 }

@@ -14,3 +14,8 @@ yarn-error.log*
 
 .vercel
 /data/users.json
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+dev.db

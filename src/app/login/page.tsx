@@ -7,9 +7,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 type AuthMode = "login" | "signup";
+type RoleOption = "Patient" | "Doctor" | "Admin";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<AuthMode>("login");
+  const [role, setRole] = useState<RoleOption>("Patient");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const router = useRouter();
@@ -29,8 +31,10 @@ export default function LoginPage() {
         body: JSON.stringify(payload),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Unable to sign in.");
-      router.push("/dashboard");
+      if (!response.ok) throw new Error(data.error ?? "Authentication failed.");
+
+      const targetDashboard = data.redirectUrl ?? "/dashboard";
+      router.push(targetDashboard);
       router.refresh();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Unable to sign in.");
@@ -40,64 +44,255 @@ export default function LoginPage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-[#080D23] text-white">
       <Navbar />
-      <main className="min-h-[calc(100vh-5rem)] bg-gradient-to-br from-blue-50 via-white to-green-50 px-4 py-12 sm:py-16">
-        <div className="mx-auto grid w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-xl shadow-blue-900/10 md:grid-cols-2">
-          <section className="hidden flex-col justify-between bg-gradient-to-br from-blue-700 to-blue-950 p-10 text-white md:flex">
-            <Link href="/" className="text-lg font-extrabold">Doctors<span className="text-green-300">4Home</span></Link>
+
+      <main className="min-h-[calc(100vh-5rem)] bg-gradient-to-br from-[#080D23] via-[#0E1733] to-[#120B2E] px-4 py-12 sm:py-16">
+        <div className="mx-auto grid w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-[#0E1733] shadow-2xl md:grid-cols-2">
+          {/* Left Hero Card */}
+          <section className="hidden flex-col justify-between bg-gradient-to-br from-[#0F1C3F] via-[#111A38] to-[#26104A] p-10 text-white md:flex">
+            <Link href="/" className="text-lg font-extrabold flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#16C9E8] to-[#398BF2]">
+                ✚
+              </span>
+              <span>Doctor<span className="text-[#65DFF0]">For</span>Home</span>
+            </Link>
+
             <div className="py-12">
-              <p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-blue-200">Care, made closer</p>
-              <h1 className="text-4xl font-extrabold leading-tight">Healthcare that meets you at home.</h1>
-              <p className="mt-5 max-w-sm leading-relaxed text-blue-100">Sign in to manage your appointments and connect with your care team.</p>
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#65DFF0]">
+                TELEMEDICINE PLATFORM
+              </p>
+              <h1 className="text-4xl font-extrabold leading-tight">
+                Healthcare that meets you at home.
+              </h1>
+              <p className="mt-5 max-w-sm leading-relaxed text-[#A2AEC3] text-sm">
+                Sign in to manage appointments, access digital prescriptions, review clinical records, and conduct verified consultations.
+              </p>
             </div>
-            <p className="text-sm text-blue-200">Trusted home visits, when you need them.</p>
+
+            <div className="border-t border-white/10 pt-4 text-xs text-[#8794AD] flex items-center justify-between">
+              <span>Patients · BMDC Doctors · Admin</span>
+              <span className="text-emerald-400 font-bold">✓ Secure Portal</span>
+            </div>
           </section>
 
+          {/* Right Form Card */}
           <section className="p-6 sm:p-10 lg:p-12">
-            <div className="mb-8 md:hidden"><p className="text-sm font-bold text-blue-700">Doctors<span className="text-green-600">4Home</span></p></div>
-            <p className="text-sm font-semibold text-green-600">Your care starts here</p>
-            <h2 className="mt-2 text-3xl font-extrabold text-blue-950">{mode === "login" ? "Welcome back" : "Create your account"}</h2>
-            <p className="mt-2 text-sm text-slate-500">{mode === "login" ? "Sign in to continue to your dashboard." : "Join Doctors4Home as a patient or doctor."}</p>
+            <div className="mb-6 md:hidden">
+              <p className="text-lg font-bold text-white">Doctor<span className="text-[#65DFF0]">For</span>Home</p>
+            </div>
 
-            <div className="mt-7 grid grid-cols-2 rounded-xl bg-slate-100 p-1" aria-label="Choose login or signup">
+            <p className="text-xs font-bold uppercase tracking-wider text-[#65DFF0]">
+              {mode === "login" ? "Account Access" : "Platform Registration"}
+            </p>
+            <h2 className="mt-1.5 text-2xl font-extrabold text-white">
+              {mode === "login" ? "Sign in to portal" : "Create your account"}
+            </h2>
+            <p className="mt-1 text-xs text-[#A2AEC3]">
+              {mode === "login"
+                ? "Sign in with your registered email and password."
+                : "Register as a patient, licensed doctor, or administrator."}
+            </p>
+
+            {/* Mode Switch Tabs */}
+            <div className="mt-6 grid grid-cols-2 rounded-xl bg-white/5 p-1 text-xs" aria-label="Choose login or signup">
               {(["login", "signup"] as const).map((option) => (
-                <button key={option} type="button" onClick={() => { setMode(option); setError(""); }} className={`rounded-lg py-2.5 text-sm font-bold capitalize transition-colors ${mode === option ? "bg-white text-blue-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => {
+                    setMode(option);
+                    setError("");
+                  }}
+                  className={`rounded-lg py-2 text-xs font-bold capitalize transition-colors ${
+                    mode === option
+                      ? "bg-[#16C9E8] text-[#080D23] shadow-sm"
+                      : "text-[#A2AEC3] hover:text-white"
+                  }`}
+                >
                   {option === "login" ? "Login" : "Sign up"}
                 </button>
               ))}
             </div>
 
-            <form onSubmit={submit} className="mt-6 space-y-4">
+            <form onSubmit={submit} className="mt-6 space-y-3.5 text-xs">
               {mode === "signup" && (
-                <label className="block text-sm font-semibold text-slate-700">Full name
-                  <input name="name" type="text" required maxLength={100} autoComplete="name" className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 font-normal outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="Your name" />
-                </label>
+                <>
+                  <label className="block font-semibold text-[#CBD5E5]">
+                    Full Name
+                    <input
+                      name="name"
+                      type="text"
+                      required
+                      maxLength={100}
+                      autoComplete="name"
+                      className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-white font-normal outline-none transition focus:border-[#16C9E8] focus:ring-1 focus:ring-[#16C9E8]"
+                      placeholder="e.g. Dr. Ayesha Rahman or John Doe"
+                    />
+                  </label>
+
+                  <label className="block font-semibold text-[#CBD5E5]">
+                    Account Role
+                    <select
+                      name="role"
+                      value={role}
+                      onChange={(e) => setRole(e.target.value as RoleOption)}
+                      required
+                      className="mt-1 w-full rounded-xl border border-white/15 bg-[#121B3A] px-3.5 py-2.5 text-white font-normal outline-none focus:border-[#16C9E8]"
+                    >
+                      <option value="Patient">Patient</option>
+                      <option value="Doctor">Doctor (Licensed BMDC Physician)</option>
+                      <option value="Admin">System Administrator</option>
+                    </select>
+                  </label>
+
+                  {/* Doctor-Specific Professional Fields */}
+                  {role === "Doctor" && (
+                    <div className="rounded-xl border border-[#16C9E8]/30 bg-[#16C9E8]/5 p-3.5 space-y-3">
+                      <p className="text-[11px] font-bold text-[#65DFF0] uppercase tracking-wider">
+                        Doctor Credentials (BMDC Verification)
+                      </p>
+
+                      <label className="block font-semibold text-[#CBD5E5]">
+                        BMDC Registration Number *
+                        <input
+                          name="bmdcNumber"
+                          type="text"
+                          required
+                          placeholder="e.g. BMDC-A-45892"
+                          className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white font-mono focus:border-[#16C9E8] outline-none"
+                        />
+                      </label>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="block font-semibold text-[#CBD5E5]">
+                          Specialization
+                          <select
+                            name="specialization"
+                            defaultValue="General Physician"
+                            className="mt-1 w-full rounded-lg border border-white/15 bg-[#121B3A] px-3 py-2 text-white outline-none"
+                          >
+                            <option value="General Physician">General Physician</option>
+                            <option value="Cardiology">Cardiology</option>
+                            <option value="Pediatrics">Pediatrics</option>
+                            <option value="Dermatology">Dermatology</option>
+                            <option value="Neurology">Neurology</option>
+                            <option value="Orthopedics">Orthopedics</option>
+                            <option value="Gynecology">Gynecology</option>
+                          </select>
+                        </label>
+
+                        <label className="block font-semibold text-[#CBD5E5]">
+                          Qualifications
+                          <input
+                            name="qualifications"
+                            type="text"
+                            defaultValue="MBBS, FCPS"
+                            className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white outline-none"
+                          />
+                        </label>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="block font-semibold text-[#CBD5E5]">
+                          Experience (Years)
+                          <input
+                            name="experienceYears"
+                            type="number"
+                            min="0"
+                            max="60"
+                            defaultValue="5"
+                            className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white outline-none"
+                          />
+                        </label>
+
+                        <label className="block font-semibold text-[#CBD5E5]">
+                          Consultation Fee (BDT)
+                          <input
+                            name="consultationFee"
+                            type="number"
+                            min="0"
+                            defaultValue="500"
+                            className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white outline-none"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Admin Registration Secret Key Field */}
+                  {role === "Admin" && (
+                    <div className="rounded-xl border border-[#DF48C7]/30 bg-[#DF48C7]/5 p-3.5 space-y-2">
+                      <p className="text-[11px] font-bold text-[#DF48C7] uppercase tracking-wider">
+                        Administrator Authorization
+                      </p>
+                      <label className="block font-semibold text-[#CBD5E5]">
+                        Admin Registration Secret Key *
+                        <input
+                          name="adminKey"
+                          type="password"
+                          required
+                          placeholder="Enter admin secret key"
+                          className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#DF48C7]"
+                        />
+                      </label>
+                    </div>
+                  )}
+                </>
               )}
-              <label className="block text-sm font-semibold text-slate-700">Email address
-                <input name="email" type="email" required maxLength={254} autoComplete="email" className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 font-normal outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="you@example.com" />
+
+              <label className="block font-semibold text-[#CBD5E5]">
+                Email Address
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  maxLength={254}
+                  autoComplete="email"
+                  className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-white font-normal outline-none transition focus:border-[#16C9E8] focus:ring-1 focus:ring-[#16C9E8]"
+                  placeholder="name@example.com"
+                />
               </label>
-              <label className="block text-sm font-semibold text-slate-700">Password
-                <input name="password" type="password" required minLength={8} maxLength={128} autoComplete={mode === "login" ? "current-password" : "new-password"} className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 font-normal outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" placeholder="At least 8 characters" />
+
+              <label className="block font-semibold text-[#CBD5E5]">
+                Password
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  minLength={8}
+                  maxLength={128}
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-white font-normal outline-none transition focus:border-[#16C9E8] focus:ring-1 focus:ring-[#16C9E8]"
+                  placeholder="At least 8 characters"
+                />
               </label>
-              {mode === "signup" && (
-                <label className="block text-sm font-semibold text-slate-700">I am a
-                  <select name="role" defaultValue="Patient" required className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
-                    <option value="Patient">Patient</option>
-                    <option value="Doctor">Doctor</option>
-                  </select>
-                </label>
+
+              {error && (
+                <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
+                  {error}
+                </div>
               )}
-              {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-              <button type="submit" disabled={pending} className="w-full rounded-xl bg-blue-700 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-wait disabled:opacity-60">
-                {pending ? "Please wait…" : mode === "login" ? "Login" : "Create account"}
+
+              <button
+                type="submit"
+                disabled={pending}
+                className="w-full rounded-xl bg-gradient-to-r from-[#16C9E8] via-[#398BF2] to-[#9560F5] py-3 text-xs font-bold text-white shadow-lg transition hover:opacity-95 disabled:cursor-wait disabled:opacity-60"
+              >
+                {pending ? "Authenticating..." : mode === "login" ? "Sign In" : "Register Account"}
               </button>
             </form>
-            <p className="mt-6 text-center text-xs text-slate-400">By continuing, you agree to use this service responsibly.</p>
+
+            <div className="mt-6 border-t border-white/10 pt-4 text-center">
+              <p className="text-[11px] text-[#8794AD]">
+                Default Admin Login: <strong className="text-white">admin@doctorforhome.com</strong> / <strong className="text-white">AdminPassword123!</strong>
+              </p>
+            </div>
           </section>
         </div>
       </main>
+
       <Footer />
-    </>
+    </div>
   );
 }

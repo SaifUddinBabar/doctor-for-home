@@ -136,10 +136,14 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-4 lg:flex">
           {user ? (
-            <>
-              <Link href="/dashboard" className="max-w-28 truncate text-[13px] font-medium text-[#B9C4D7] hover:text-white">{user.name}</Link>
-              <button type="button" onClick={logout} className="text-[13px] font-medium text-[#B9C4D7] hover:text-white">Logout</button>
-            </>
+            <div className="flex items-center gap-3">
+              <Link href="/dashboard" className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[12px] font-medium text-[#B9C4D7] hover:border-white/20 hover:text-white transition">
+                <span className={`inline-block h-2 w-2 rounded-full ${user.role === "Admin" ? "bg-[#DF48C7]" : user.role === "Doctor" ? "bg-[#16C9E8]" : "bg-[#24D6A0]"}`} />
+                <span className="max-w-28 truncate">{user.name}</span>
+                <span className="text-[10px] uppercase font-bold text-[#8794AD]">({user.role})</span>
+              </Link>
+              <button type="button" onClick={logout} className="text-[13px] font-medium text-[#B9C4D7] hover:text-white transition">Logout</button>
+            </div>
           ) : <Link href="/login" className="text-[13px] font-medium text-[#B9C4D7] transition hover:text-white">Login</Link>}
           <Link href="/#appointment" className="rounded-full bg-gradient-to-r from-[#16C9E8] via-[#398BF2] to-[#9560F5] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_8px_28px_rgba(57,139,242,.25)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(57,139,242,.35)]">Book Now</Link>
         </div>

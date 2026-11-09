@@ -1,6 +1,7 @@
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { cookies } from "next/headers";
 
-export type UserRole = "Patient" | "Doctor";
+export type UserRole = "Patient" | "Doctor" | "Admin";
 
 export interface AuthUser {
   id: string;
@@ -9,7 +10,7 @@ export interface AuthUser {
   role: UserRole;
 }
 
-const SESSION_SECONDS = 60 * 60 * 24 * 7;
+const SESSION_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
 function sessionSecret() {
   const secret = process.env.AUTH_SECRET;
@@ -62,7 +63,7 @@ export function readSessionToken(token?: string): AuthUser | null {
 
   try {
     const claims = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as AuthUser & { exp?: number };
-    if (!claims.id || !claims.name || !claims.email || !["Patient", "Doctor"].includes(claims.role)) return null;
+    if (!claims.id || !claims.name || !claims.email || !["Patient", "Doctor", "Admin"].includes(claims.role)) return null;
     if (!claims.exp || claims.exp <= Math.floor(Date.now() / 1000)) return null;
     return { id: claims.id, name: claims.name, email: claims.email, role: claims.role };
   } catch {
@@ -72,3 +73,38 @@ export function readSessionToken(token?: string): AuthUser | null {
 
 export const SESSION_COOKIE = "doctors4home_session";
 export const SESSION_MAX_AGE = SESSION_SECONDS;
+
+/**
+ * Server-side helper to read the authenticated user from cookies (for Server Components / Actions)
+ */
+export async function getSessionUser(): Promise<AuthUser | null> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(SESSION_COOKIE)?.value;
+    return readSessionToken(token);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Helper to extract user from Request headers (for Route Handlers)
+ */
+export function getAuthFromRequest(request: Request): AuthUser | null {
+  const cookieHeader = request.headers.get("cookie");
+  if (!cookieHeader) return null;
+  const token = cookieHeader
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${SESSION_COOKIE}=`))
+    ?.slice(SESSION_COOKIE.length + 1);
+  return readSessionToken(token ? decodeURIComponent(token) : undefined);
+}
+
+/**
+ * Role-check authorization gate for Route Handlers
+ */
+export function checkRole(user: AuthUser | null, allowedRoles: UserRole[]): boolean {
+  if (!user) return false;
+  return allowedRoles.includes(user.role);
+}

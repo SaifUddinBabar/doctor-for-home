@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getAuthFromRequest } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 interface DoctorBooking {
   doctorId: number;
@@ -45,7 +47,56 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Please provide valid appointment details." }, { status: 400 });
   }
 
-  // Keep the existing doctor-card booking contract intact.
+  const authUser = getAuthFromRequest(request);
+
+  // Helper to resolve or create patient profile
+  async function resolvePatientProfile(email: string, name: string, phone: string, address?: string) {
+    if (authUser) {
+      let profile = await prisma.patientProfile.findUnique({ where: { userId: authUser.id } });
+      if (!profile) {
+        profile = await prisma.patientProfile.create({
+          data: {
+            userId: authUser.id,
+            address: address || null,
+          },
+        });
+      }
+      return profile;
+    }
+
+    // Unauthenticated guest user booking: find or create guest user
+    const normalizedEmail = email.trim().toLowerCase();
+    let guestUser = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      include: { patientProfile: true },
+    });
+
+    if (!guestUser) {
+      guestUser = await prisma.user.create({
+        data: {
+          name: name.trim(),
+          email: normalizedEmail,
+          role: "Patient",
+          passwordHash: "guest_booking_placeholder",
+          phone: phone.trim(),
+          emailVerified: false,
+          patientProfile: {
+            create: { address: address || null },
+          },
+        },
+        include: { patientProfile: true },
+      });
+    } else if (!guestUser.patientProfile) {
+      const newProfile = await prisma.patientProfile.create({
+        data: { userId: guestUser.id, address: address || null },
+      });
+      guestUser = { ...guestUser, patientProfile: newProfile };
+    }
+
+    return guestUser.patientProfile;
+  }
+
+  // Doctor card booking contract
   if ("doctorId" in body) {
     const booking = body as unknown as DoctorBooking;
     if (
@@ -65,17 +116,53 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Please provide valid appointment details." }, { status: 400 });
     }
 
-    const cleanBooking = {
-      ...booking,
-      doctorName: booking.doctorName.trim(),
-      patientName: booking.patientName.trim(),
-      phone: booking.phone.trim(),
-      address: booking.address.trim(),
-    };
-    console.log("New doctor appointment request:", cleanBooking);
-    return NextResponse.json({ message: "Appointment request submitted successfully." }, { status: 201 });
+    try {
+      const patientEmail = authUser?.email ?? `patient-${booking.phone.replace(/\D/g, "")}@doctorforhome.local`;
+      const patientProfile = await resolvePatientProfile(
+        patientEmail,
+        booking.patientName,
+        booking.phone,
+        booking.address
+      );
+
+      if (!patientProfile) {
+        return NextResponse.json({ error: "Unable to associate patient profile." }, { status: 500 });
+      }
+
+      // Check if a doctorProfile matches or grab first available approved/pending doctor
+      const doctorProfile = await prisma.doctorProfile.findFirst();
+
+      const createdAppointment = await prisma.appointment.create({
+        data: {
+          patientId: patientProfile.id,
+          doctorId: doctorProfile?.id || null,
+          appointmentType: "Home Visit",
+          scheduledDate: booking.date,
+          scheduledTime: booking.time,
+          patientName: booking.patientName.trim(),
+          patientPhone: booking.phone.trim(),
+          patientEmail,
+          address: booking.address.trim(),
+          status: "PENDING",
+        },
+      });
+
+      console.log("Appointment saved to database:", createdAppointment.id);
+
+      return NextResponse.json(
+        {
+          message: "Appointment request submitted successfully.",
+          appointmentId: createdAppointment.id,
+        },
+        { status: 201 }
+      );
+    } catch (err) {
+      console.error("Booking error:", err);
+      return NextResponse.json({ error: "Failed to persist appointment. Please try again." }, { status: 500 });
+    }
   }
 
+  // Homepage consultation request contract
   const booking = body as unknown as AppointmentRequest;
   if (
     typeof booking.appointmentType !== "string" ||
@@ -95,16 +182,47 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Please provide valid appointment details." }, { status: 400 });
   }
 
-  const cleanRequest: AppointmentRequest = {
-    appointmentType: booking.appointmentType,
-    patientName: booking.patientName.trim(),
-    email: booking.email.trim().toLowerCase(),
-    phone: booking.phone.trim(),
-    date: booking.date,
-    time: booking.time,
-    notes: booking.notes?.trim() ?? "",
-  };
+  try {
+    const patientProfile = await resolvePatientProfile(
+      booking.email,
+      booking.patientName,
+      booking.phone
+    );
 
-  console.log("New homepage appointment request:", cleanRequest);
-  return NextResponse.json({ message: "Appointment request submitted successfully." }, { status: 201 });
+    if (!patientProfile) {
+      return NextResponse.json({ error: "Unable to associate patient profile." }, { status: 500 });
+    }
+
+    const doctorProfile = await prisma.doctorProfile.findFirst({
+      where: { verificationStatus: "APPROVED" },
+    });
+
+    const createdAppointment = await prisma.appointment.create({
+      data: {
+        patientId: patientProfile.id,
+        doctorId: doctorProfile?.id || null,
+        appointmentType: booking.appointmentType,
+        scheduledDate: booking.date,
+        scheduledTime: booking.time,
+        patientName: booking.patientName.trim(),
+        patientPhone: booking.phone.trim(),
+        patientEmail: booking.email.trim().toLowerCase(),
+        notes: booking.notes?.trim() || null,
+        status: "PENDING",
+      },
+    });
+
+    console.log("Homepage appointment saved to database:", createdAppointment.id);
+
+    return NextResponse.json(
+      {
+        message: "Appointment request submitted successfully.",
+        appointmentId: createdAppointment.id,
+      },
+      { status: 201 }
+    );
+  } catch (err) {
+    console.error("Homepage booking error:", err);
+    return NextResponse.json({ error: "Failed to persist appointment. Please try again." }, { status: 500 });
+  }
 }
