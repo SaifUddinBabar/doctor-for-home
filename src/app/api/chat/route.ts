@@ -18,6 +18,7 @@ Safety and response rules:
 - End every response with this exact disclaimer: "Medical disclaimer: This AI assistant provides general information only. It cannot diagnose or treat medical conditions and is not a substitute for professional medical advice. Contact a licensed healthcare professional for personal care."`;
 
 export async function POST(request: Request) {
+  console.log("Incoming request");
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return Response.json({ error: "The AI assistant is not configured yet." }, { status: 503 });
@@ -54,16 +55,17 @@ export async function POST(request: Request) {
 
   try {
     const result = streamText({
-      model: groq("llama-3.3-70b-versatile"),
+      model: groq("openai/gpt-oss-120b"),
       system: SYSTEM_PROMPT,
       messages: await convertToModelMessages(messages),
       maxOutputTokens: 900,
       abortSignal: request.signal,
+      onError: ({ error }) => console.error("Chat API Error:", error),
     });
 
     return result.toUIMessageStreamResponse();
   } catch (error) {
-    console.error("Chat request failed:", error);
+    console.error("Chat API Error:", error);
     return Response.json({ error: "Sorry, the assistant could not respond right now. Please try again." }, { status: 500 });
   }
 }
