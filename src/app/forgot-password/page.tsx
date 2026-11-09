@@ -17,6 +17,10 @@ export default function ForgotPasswordPage() {
   const [message, setMessage] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
+  // Dev OTP support for local development without external SMTP setup
+  const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [isRealEmailSent, setIsRealEmailSent] = useState(false);
+
   // Timer countdown
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -44,7 +48,18 @@ export default function ForgotPasswordPage() {
         throw new Error(data.error || "Failed to request verification code.");
       }
 
-      setMessage(data.message || "A 6-digit verification code has been sent.");
+      if (data.userNotFound) {
+        setError(`No account found with email "${email}". Please enter the email you registered with or create a new account.`);
+        return;
+      }
+
+      setMessage(data.message || "A 6-digit verification code has been generated.");
+      setIsRealEmailSent(Boolean(data.isRealEmailSent));
+
+      if (data.devOtp) {
+        setDevOtp(data.devOtp);
+      }
+
       setCooldown(60);
       setStep(2);
     } catch (err) {
@@ -114,7 +129,7 @@ export default function ForgotPasswordPage() {
               <h1 className="text-2xl font-black tracking-tight">Password Recovery</h1>
               <p className="text-xs text-slate-400 mt-2">
                 {step === 1 && "Enter your registered email to receive a 6-digit OTP code."}
-                {step === 2 && `Enter the 6-digit OTP sent to ${email} and choose a new password.`}
+                {step === 2 && `Enter the 6-digit OTP code sent for ${email} and choose a new password.`}
                 {step === 3 && "Your password has been securely updated."}
               </p>
             </div>
@@ -125,7 +140,34 @@ export default function ForgotPasswordPage() {
               </div>
             )}
 
-            {message && step !== 3 && (
+            {/* Dev Mode OTP Banner */}
+            {step === 2 && devOtp && (
+              <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wide">
+                    <span>⚡</span> Verification Code (Local Demo)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setOtp(devOtp)}
+                    className="px-2.5 py-1 bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 font-bold rounded-lg text-[11px] transition border border-amber-400/40"
+                  >
+                    Auto-Fill Code
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-300">Your 6-digit code is:</span>
+                  <span className="text-xl font-mono font-black tracking-widest text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30">
+                    {devOtp}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  Real SMTP is not configured yet in <code className="text-amber-200">.env.local</code>. The code is shown here for testing and logged in your terminal.
+                </p>
+              </div>
+            )}
+
+            {message && step !== 3 && !devOtp && (
               <div className="mb-6 p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 font-semibold">
                 {message}
               </div>
@@ -175,7 +217,9 @@ export default function ForgotPasswordPage() {
                     className="w-full text-center text-2xl tracking-[0.5em] font-mono font-bold bg-[#162044] border border-blue-900/60 rounded-xl px-4 py-3 text-cyan-400 placeholder-slate-600 focus:outline-none focus:border-cyan-400"
                   />
                   <p className="text-[11px] text-slate-500 mt-1 text-center">
-                    Valid for 5 minutes. (Check server logs if SMTP is not configured)
+                    {isRealEmailSent
+                      ? "Check your inbox and spam folder. Code expires in 5 minutes."
+                      : "Valid for 5 minutes. (Also visible in server terminal)"}
                   </p>
                 </div>
 

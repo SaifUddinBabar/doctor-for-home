@@ -19,10 +19,11 @@ export async function POST(request: Request) {
       where: { email },
     });
 
-    // To prevent user enumeration attacks, respond with success message even if user doesn't exist
+    // To prevent user enumeration attacks in production, respond with success message
     if (!user) {
       return NextResponse.json({
         message: "If an account with this email exists, a 6-digit verification code has been sent.",
+        userNotFound: true,
       });
     }
 
@@ -65,16 +66,24 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send email OTP
-    await sendOtpEmail({
+    // Send email OTP (via SMTP, Resend, or local fallback)
+    const emailResult = await sendOtpEmail({
       to: email,
       otp,
       purpose: "Password Reset",
     });
 
+    const isRealEmailSent = emailResult.delivered;
+
     return NextResponse.json({
-      message: "If an account with this email exists, a 6-digit verification code has been sent.",
+      message: isRealEmailSent
+        ? `A 6-digit verification code has been sent to ${email}. Check your inbox and spam folder.`
+        : "A 6-digit verification code has been generated.",
       expiresInMinutes: OTP_EXPIRY_MINUTES,
+      deliveryMethod: emailResult.method,
+      isRealEmailSent,
+      // Provide devOtp when real email delivery is not configured, allowing smooth localhost testing
+      devOtp: isRealEmailSent ? undefined : otp,
     });
   } catch (err) {
     console.error("POST /api/auth/forgot-password error:", err);

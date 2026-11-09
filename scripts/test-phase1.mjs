@@ -176,6 +176,7 @@ async function runTests() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      doctorId: doctorToApprove.id,
       appointmentType: "Home Visit",
       patientName: "Karim Ullah",
       email: "karim@example.com",
