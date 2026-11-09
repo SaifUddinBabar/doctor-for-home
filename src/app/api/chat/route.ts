@@ -1,6 +1,9 @@
+import { createGroq } from "@ai-sdk/groq";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 
 export const maxDuration = 30;
+
+const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
 
 const SYSTEM_PROMPT = `You are a careful, compassionate medical information assistant for Doctors for Home. You are not a doctor and must not claim to diagnose, treat, or replace a licensed clinician.
 
@@ -15,7 +18,7 @@ Safety and response rules:
 - End every response with this exact disclaimer: "Medical disclaimer: This AI assistant provides general information only. It cannot diagnose or treat medical conditions and is not a substitute for professional medical advice. Contact a licensed healthcare professional for personal care."`;
 
 export async function POST(request: Request) {
-  const apiKey = process.env.AI_GATEWAY_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return Response.json({ error: "The AI assistant is not configured yet." }, { status: 503 });
   }
@@ -51,7 +54,7 @@ export async function POST(request: Request) {
 
   try {
     const result = streamText({
-      model: "google/gemini-3.8-pro",
+      model: groq("llama-3.3-70b-versatile"),
       system: SYSTEM_PROMPT,
       messages: await convertToModelMessages(messages),
       maxOutputTokens: 900,
