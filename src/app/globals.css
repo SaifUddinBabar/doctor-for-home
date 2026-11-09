@@ -22,6 +22,26 @@
   }
 }
 
+@keyframes chatPop {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-chat-pop { animation: chatPop 180ms ease-out both; }
+.chat-typing-dot { animation: chatTyping 1.2s ease-in-out infinite; }
+.chat-typing-delay-1 { animation-delay: 120ms; }
+.chat-typing-delay-2 { animation-delay: 240ms; }
+
+@keyframes chatTyping {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-chat-pop, .chat-typing-dot { animation: none; }
+  .chat-launcher { transition: none; }
+}
+
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }

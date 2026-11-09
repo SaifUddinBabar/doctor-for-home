@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ChatWidget from "@/components/ChatWidget";
 
 export const metadata: Metadata = {
   title: "Doctors for Home | Healthcare at Your Doorstep",
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased font-sans bg-white text-slate-800">
         {children}
+        <ChatWidget />
       </body>
     </html>
   );
