@@ -1,4 +1,3 @@
-import { createGoogle } from "@ai-sdk/google";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 
 export const maxDuration = 30;
@@ -16,7 +15,7 @@ Safety and response rules:
 - End every response with this exact disclaimer: "Medical disclaimer: This AI assistant provides general information only. It cannot diagnose or treat medical conditions and is not a substitute for professional medical advice. Contact a licensed healthcare professional for personal care."`;
 
 export async function POST(request: Request) {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.AI_GATEWAY_API_KEY;
   if (!apiKey) {
     return Response.json({ error: "The AI assistant is not configured yet." }, { status: 503 });
   }
@@ -51,9 +50,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const google = createGoogle({ apiKey });
     const result = streamText({
-      model: google("gemini-3.8-flash"),
+      model: "google/gemini-3.8-pro",
       system: SYSTEM_PROMPT,
       messages: await convertToModelMessages(messages),
       maxOutputTokens: 900,
