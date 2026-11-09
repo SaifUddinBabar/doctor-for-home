@@ -54,10 +54,11 @@ export async function POST(request: Request) {
   }
 
   try {
+    const recentMessages = messages.slice(-5);
     const result = streamText({
       model: groq("openai/gpt-oss-120b"),
       system: SYSTEM_PROMPT,
-      messages: await convertToModelMessages(messages),
+      messages: await convertToModelMessages(recentMessages),
       maxOutputTokens: 900,
       abortSignal: request.signal,
       onError: ({ error }) => console.error("Chat API Error:", error),
