@@ -147,45 +147,45 @@ export default function DoctorProfilePage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-[#080D23] text-white">
       <Navbar />
 
-      <main className="min-h-screen bg-slate-50 py-10">
-        <div className="max-w-6xl mx-auto px-6">
+      <main className="py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-slate-500 text-sm mb-6">
-            <Link href="/" className="hover:text-blue-600">Home</Link>
-            <span>/</span>
-            <Link href="/find-a-doctor" className="hover:text-blue-600">Find a Doctor</Link>
-            <span>/</span>
-            <span className="text-slate-800 font-semibold">{doctor?.name || "Doctor Profile"}</span>
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-[#8794AD] mb-8">
+            <Link href="/" className="hover:text-[#16C9E8] transition-colors">Home</Link>
+            <span className="text-white/20">/</span>
+            <Link href="/find-a-doctor" className="hover:text-[#16C9E8] transition-colors">Find a Doctor</Link>
+            <span className="text-white/20">/</span>
+            <span className="text-white font-semibold truncate">{doctor?.name || "Doctor Profile"}</span>
           </div>
 
           {loading && (
-            <div className="bg-white rounded-3xl p-10 border border-slate-100 shadow-sm animate-pulse space-y-6">
+            <div className="rounded-3xl border border-white/10 bg-[#0E1733] p-10 shadow-2xl animate-pulse space-y-6">
               <div className="flex items-center gap-6">
-                <div className="w-28 h-28 bg-slate-200 rounded-2xl" />
+                <div className="w-24 h-24 sm:w-28 sm:h-28 bg-white/10 rounded-2xl" />
                 <div className="space-y-3 flex-1">
-                  <div className="h-6 bg-slate-200 rounded w-1/3" />
-                  <div className="h-4 bg-slate-100 rounded w-1/4" />
+                  <div className="h-7 bg-white/10 rounded-xl w-1/3" />
+                  <div className="h-4 bg-white/5 rounded-lg w-1/4" />
                 </div>
               </div>
-              <div className="h-24 bg-slate-100 rounded-xl" />
+              <div className="h-24 bg-white/5 rounded-2xl" />
             </div>
           )}
 
           {!loading && error && (
-            <div className="bg-white rounded-3xl p-12 text-center border border-red-100 shadow-sm">
-              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="rounded-3xl border border-rose-500/20 bg-[#0E1733] p-12 text-center shadow-2xl max-w-2xl mx-auto">
+              <div className="w-16 h-16 bg-rose-500/10 text-rose-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">Doctor Profile Not Available</h2>
-              <p className="text-slate-500 mb-6">{error}</p>
+              <h2 className="text-2xl font-black text-white mb-2">Doctor Profile Unavailable</h2>
+              <p className="text-[#A2AEC3] text-sm mb-6">{error}</p>
               <Link
                 href="/find-a-doctor"
-                className="inline-block bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-xl hover:bg-blue-700 transition"
+                className="inline-block bg-gradient-to-r from-[#16C9E8] to-[#398BF2] text-[#080D23] font-black px-6 py-3 rounded-xl hover:opacity-95 transition shadow-lg shadow-cyan-500/20"
               >
                 Browse All Doctors
               </Link>
@@ -197,93 +197,107 @@ export default function DoctorProfilePage() {
               {/* Left Column: Doctor Profile Overview */}
               <div className="lg:col-span-7 space-y-6">
                 {/* Profile Card */}
-                <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 bg-blue-50 text-blue-700 text-xs font-bold px-4 py-2 rounded-bl-2xl uppercase tracking-wider">
-                    {doctor.specialty}
+                <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#121B3B] via-[#0E1733] to-[#0A1026] p-6 sm:p-8 shadow-2xl">
+                  {/* Subtle Background Glows */}
+                  <div className="absolute -top-24 -right-24 w-56 h-56 bg-[#16C9E8]/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-24 -left-24 w-56 h-56 bg-[#DF48C7]/10 rounded-full blur-3xl pointer-events-none" />
+
+                  {/* Specialty Badge */}
+                  <div className="flex justify-between items-start mb-6">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DF48C7]/30 bg-[#DF48C7]/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-[#DF48C7]">
+                      <span>✦</span> {doctor.specialty}
+                    </span>
+                    <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full border border-emerald-500/30">
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      BMDC Certified
+                    </span>
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-6">
-                    <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white text-3xl font-extrabold shadow-md shrink-0 ring-4 ring-blue-50">
+                    <div className="w-24 h-24 bg-gradient-to-br from-[#16C9E8] via-[#398BF2] to-[#DF48C7] rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-xl shrink-0 ring-4 ring-white/10">
                       {doctor.avatar}
                     </div>
 
                     <div>
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <h1 className="text-2xl sm:text-3xl font-black text-slate-900">{doctor.name}</h1>
-                        <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200">
-                          <svg className="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          BMDC Certified
-                        </span>
-                      </div>
-                      <p className="text-slate-600 font-medium text-sm">{doctor.qualifications}</p>
-                      <p className="text-xs font-mono text-slate-400 mt-0.5">Registration No: {doctor.bmdcNumber}</p>
+                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{doctor.name}</h1>
+                      <p className="text-[#A2AEC3] font-medium text-sm mt-1">{doctor.qualifications}</p>
+                      <p className="text-xs font-mono text-[#8794AD] mt-1 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#16C9E8]" />
+                        BMDC Reg: <strong className="text-slate-300">{doctor.bmdcNumber}</strong>
+                      </p>
                     </div>
                   </div>
 
                   {/* Highlights Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-y border-slate-100 text-center my-6">
-                    <div>
-                      <p className="text-xs text-slate-400 uppercase font-semibold">Experience</p>
-                      <p className="text-base font-bold text-slate-800">{doctor.experience} Years</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-4 border-y border-white/10 my-6 bg-white/[0.02] rounded-2xl px-3 sm:px-4 text-center">
+                    <div className="p-2">
+                      <p className="text-[11px] text-[#8794AD] uppercase font-bold tracking-wider">Experience</p>
+                      <p className="text-base sm:text-lg font-black text-white mt-0.5">{doctor.experience} Years</p>
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-400 uppercase font-semibold">Online Fee</p>
-                      <p className="text-base font-bold text-blue-600">৳{doctor.fee}</p>
+                    <div className="p-2">
+                      <p className="text-[11px] text-[#8794AD] uppercase font-bold tracking-wider">Online Fee</p>
+                      <p className="text-base sm:text-lg font-black text-[#16C9E8] mt-0.5">৳{doctor.fee}</p>
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-400 uppercase font-semibold">Home Visit</p>
-                      <p className="text-base font-bold text-indigo-600">৳{doctor.homeVisitFee || doctor.fee + 300}</p>
+                    <div className="p-2">
+                      <p className="text-[11px] text-[#8794AD] uppercase font-bold tracking-wider">Home Visit</p>
+                      <p className="text-base sm:text-lg font-black text-[#DF48C7] mt-0.5">৳{doctor.homeVisitFee || doctor.fee + 300}</p>
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-400 uppercase font-semibold">Rating</p>
-                      <p className="text-base font-bold text-yellow-500">★ {(doctor.rating || 4.9).toFixed(1)}</p>
+                    <div className="p-2">
+                      <p className="text-[11px] text-[#8794AD] uppercase font-bold tracking-wider">Rating</p>
+                      <p className="text-base sm:text-lg font-black text-amber-300 mt-0.5 flex items-center justify-center gap-1">
+                        <span>★</span> {(doctor.rating || 4.9).toFixed(1)}
+                      </p>
                     </div>
                   </div>
 
                   {/* Biography */}
                   <div className="space-y-2 mb-6">
-                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">About Doctor</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">{doctor.bio}</p>
+                    <h3 className="text-xs font-bold text-[#16C9E8] uppercase tracking-wider flex items-center gap-2">
+                      <span>🩺</span> About Physician
+                    </h3>
+                    <p className="text-sm text-[#B9C4D7] leading-relaxed">{doctor.bio}</p>
                   </div>
 
                   {/* Affiliation & Location */}
-                  <div className="space-y-3 bg-slate-50 p-4 rounded-2xl">
-                    <div className="flex items-center gap-3 text-sm text-slate-700">
-                      <svg className="w-5 h-5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                      <span>Affiliated Hospital: <strong>{doctor.hospital || "Square Hospital, Dhaka"}</strong></span>
+                  <div className="space-y-3 bg-[#162044]/60 border border-white/10 p-4 rounded-2xl">
+                    <div className="flex items-center gap-3 text-xs sm:text-sm text-[#B9C4D7]">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#16C9E8]/10 text-[#16C9E8]">
+                        🏥
+                      </span>
+                      <span>Affiliated Hospital: <strong className="text-white">{doctor.hospital || "Square Hospital, Dhaka"}</strong></span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-slate-700">
-                      <svg className="w-5 h-5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span>Practicing City: <strong>{doctor.location || "Dhaka"}</strong></span>
+                    <div className="flex items-center gap-3 text-xs sm:text-sm text-[#B9C4D7]">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#DF48C7]/10 text-[#DF48C7]">
+                        📍
+                      </span>
+                      <span>Practicing City: <strong className="text-white">{doctor.location || "Dhaka"}</strong></span>
                     </div>
                   </div>
                 </div>
 
                 {/* Schedule & Working Days Card */}
-                <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
-                  <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Weekly Availability Schedule
-                  </h3>
+                <div className="rounded-3xl border border-white/10 bg-[#0E1733] p-6 sm:p-8 shadow-xl">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <span className="text-[#16C9E8]">📅</span> Weekly Availability Schedule
+                    </h3>
+                    <span className="text-[11px] font-mono text-[#16C9E8] bg-[#16C9E8]/10 px-2.5 py-0.5 rounded-full border border-[#16C9E8]/20">
+                      Slot: {doctor.slotDurationMinutes || 30} mins
+                    </span>
+                  </div>
+
                   <div className="flex flex-wrap gap-2 mb-4">
                     {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => {
                       const isAvailable = doctor.availableDays?.includes(day);
                       return (
                         <span
                           key={day}
-                          className={`text-xs font-semibold px-3 py-1.5 rounded-xl border ${
+                          className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
                             isAvailable
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              : "bg-slate-50 text-slate-400 border-slate-100 opacity-60"
+                              ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+                              : "bg-white/5 text-slate-500 border-white/5 opacity-50"
                           }`}
                         >
                           {day} {isAvailable ? "✓" : "—"}
@@ -291,35 +305,38 @@ export default function DoctorProfilePage() {
                       );
                     })}
                   </div>
-                  <p className="text-xs text-slate-500">
-                    Consultation Slot Duration: <strong>{doctor.slotDurationMinutes || 30} minutes</strong>
+                  <p className="text-xs text-[#8794AD]">
+                    Patients can book appointments according to verified schedule. All bookings receive direct confirmation from the doctor.
                   </p>
                 </div>
               </div>
 
               {/* Right Column: Interactive Appointment Booking */}
               <div className="lg:col-span-5">
-                <div className="bg-white rounded-3xl p-8 border border-blue-100 shadow-xl sticky top-8">
+                <div className="rounded-3xl border border-[#16C9E8]/30 bg-gradient-to-b from-[#111936] to-[#0A1026] p-6 sm:p-8 shadow-2xl sticky top-24">
                   <div className="mb-6">
-                    <h2 className="text-xl font-black text-slate-900">Schedule Appointment</h2>
-                    <p className="text-xs text-slate-500 mt-1">Direct booking with live schedule verification</p>
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-[#16C9E8]/30 bg-[#16C9E8]/10 px-3 py-1 text-[11px] font-bold text-[#16C9E8] uppercase tracking-wider mb-2">
+                      <span>⚡</span> Fast Scheduling
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-black text-white">Book Consultation</h2>
+                    <p className="text-xs text-[#8794AD] mt-1">Direct booking with live schedule & conflict verification</p>
                   </div>
 
                   {bookingSuccess ? (
-                    <div className="text-center py-8 space-y-4">
-                      <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                    <div className="text-center py-6 space-y-4">
+                      <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <h3 className="text-xl font-bold text-slate-800">Booking Confirmed!</h3>
-                      <p className="text-sm text-slate-600">
-                        Your appointment request has been submitted to Dr. {doctor.name} for <strong>{selectedDate}</strong> at <strong>{selectedTime}</strong>.
+                      <h3 className="text-xl font-bold text-white">Booking Confirmed!</h3>
+                      <p className="text-xs sm:text-sm text-[#B9C4D7] leading-relaxed">
+                        Your appointment request has been submitted to Dr. <strong className="text-white">{doctor.name}</strong> for <strong className="text-[#16C9E8]">{selectedDate}</strong> at <strong className="text-[#16C9E8]">{selectedTime}</strong>.
                       </p>
                       <div className="pt-4 flex flex-col gap-2">
                         <Link
                           href="/dashboard/patient"
-                          className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition shadow-md"
+                          className="w-full py-3.5 bg-gradient-to-r from-[#16C9E8] to-[#398BF2] text-[#080D23] font-black rounded-xl text-sm transition shadow-lg shadow-cyan-500/20 hover:opacity-95 text-center"
                         >
                           View in Patient Dashboard
                         </Link>
@@ -330,7 +347,7 @@ export default function DoctorProfilePage() {
                             setSelectedDate("");
                             setSelectedTime("");
                           }}
-                          className="w-full py-2.5 text-xs text-slate-500 hover:text-slate-700 font-semibold"
+                          className="w-full py-2.5 text-xs text-[#8794AD] hover:text-white font-semibold transition"
                         >
                           Book another appointment
                         </button>
@@ -340,41 +357,41 @@ export default function DoctorProfilePage() {
                     <form onSubmit={handleBookingSubmit} className="space-y-4">
                       {/* Consultation Type Selector */}
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
                           Consultation Format
                         </label>
                         <div className="grid grid-cols-2 gap-2">
                           <button
                             type="button"
                             onClick={() => setAppointmentType("Online Consultation")}
-                            className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition text-left flex flex-col ${
+                            className={`py-3 px-3 rounded-2xl border text-xs font-bold transition text-left flex flex-col ${
                               appointmentType === "Online Consultation"
-                                ? "bg-blue-50 border-blue-600 text-blue-900 ring-2 ring-blue-100"
-                                : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                                ? "bg-[#16C9E8]/10 border-[#16C9E8] text-white shadow-lg shadow-cyan-500/10 ring-1 ring-[#16C9E8]"
+                                : "bg-white/5 border-white/10 text-[#8794AD] hover:bg-white/10 hover:text-white"
                             }`}
                           >
                             <span>Video Consultation</span>
-                            <span className="text-blue-600 font-extrabold mt-0.5">৳{doctor.fee}</span>
+                            <span className="text-[#16C9E8] font-extrabold text-sm mt-0.5">৳{doctor.fee}</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => setAppointmentType("Home Visit")}
-                            className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition text-left flex flex-col ${
+                            className={`py-3 px-3 rounded-2xl border text-xs font-bold transition text-left flex flex-col ${
                               appointmentType === "Home Visit"
-                                ? "bg-indigo-50 border-indigo-600 text-indigo-900 ring-2 ring-indigo-100"
-                                : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                                ? "bg-[#DF48C7]/10 border-[#DF48C7] text-white shadow-lg shadow-pink-500/10 ring-1 ring-[#DF48C7]"
+                                : "bg-white/5 border-white/10 text-[#8794AD] hover:bg-white/10 hover:text-white"
                             }`}
                           >
-                            <span>In-person Home Visit</span>
-                            <span className="text-indigo-600 font-extrabold mt-0.5">৳{doctor.homeVisitFee || doctor.fee + 300}</span>
+                            <span>Home Visit</span>
+                            <span className="text-[#DF48C7] font-extrabold text-sm mt-0.5">৳{doctor.homeVisitFee || doctor.fee + 300}</span>
                           </button>
                         </div>
                       </div>
 
                       {/* Select Date */}
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                          Select Date
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                          Consultation Date
                         </label>
                         <input
                           type="date"
@@ -385,20 +402,22 @@ export default function DoctorProfilePage() {
                             setSelectedDate(e.target.value);
                             setSelectedTime("");
                           }}
-                          className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                          className="w-full bg-[#162044] border border-white/15 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-[#16C9E8] focus:ring-1 focus:ring-[#16C9E8] [color-scheme:dark]"
                         />
                         {dateValidationMessage && (
-                          <p className="text-xs text-rose-600 font-semibold mt-1">{dateValidationMessage}</p>
+                          <p className="text-xs text-rose-400 font-semibold mt-1.5 flex items-center gap-1">
+                            <span>⚠️</span> {dateValidationMessage}
+                          </p>
                         )}
                       </div>
 
                       {/* Time Slots */}
                       {selectedDate && !dateValidationMessage && (
                         <div>
-                          <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                            Available Time Slot
+                          <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                            Select Time Slot
                           </label>
-                          <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto p-1">
+                          <div className="grid grid-cols-3 gap-2 max-h-44 overflow-y-auto p-1 rounded-xl bg-black/20 border border-white/5">
                             {availableSlotsWithStatus.map(({ time, isBooked }) => (
                               <button
                                 key={time}
@@ -407,14 +426,14 @@ export default function DoctorProfilePage() {
                                 onClick={() => setSelectedTime(time)}
                                 className={`py-2 px-1 text-center rounded-lg text-xs font-semibold transition ${
                                   isBooked
-                                    ? "bg-slate-100 text-slate-400 line-through cursor-not-allowed border border-dashed border-slate-200"
+                                    ? "bg-white/5 text-slate-600 line-through cursor-not-allowed border border-white/5"
                                     : selectedTime === time
-                                    ? "bg-blue-600 text-white shadow-sm ring-2 ring-blue-300"
-                                    : "bg-slate-50 text-slate-700 border border-slate-200 hover:bg-blue-50 hover:text-blue-700"
+                                    ? "bg-gradient-to-r from-[#16C9E8] to-[#398BF2] text-[#080D23] font-black shadow-md shadow-cyan-500/25"
+                                    : "bg-[#162044] text-slate-200 border border-white/10 hover:border-[#16C9E8] hover:text-white"
                                 }`}
                               >
                                 {time}
-                                {isBooked && <span className="block text-[9px] text-slate-400">Booked</span>}
+                                {isBooked && <span className="block text-[8px] text-slate-500">Booked</span>}
                               </button>
                             ))}
                           </div>
@@ -423,68 +442,70 @@ export default function DoctorProfilePage() {
 
                       {/* Patient Details */}
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Patient Full Name</label>
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                          Patient Full Name
+                        </label>
                         <input
                           type="text"
                           required
                           placeholder="e.g. Mohammad Babar"
                           value={patientName}
                           onChange={(e) => setPatientName(e.target.value)}
-                          className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm outline-none focus:border-blue-500"
+                          className="w-full bg-[#162044] border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-[#16C9E8]"
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Phone</label>
+                          <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Phone</label>
                           <input
                             type="tel"
                             required
                             placeholder="+8801700000000"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm outline-none focus:border-blue-500"
+                            className="w-full bg-[#162044] border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-[#16C9E8]"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Email</label>
+                          <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Email</label>
                           <input
                             type="email"
                             placeholder="patient@example.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm outline-none focus:border-blue-500"
+                            className="w-full bg-[#162044] border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-[#16C9E8]"
                           />
                         </div>
                       </div>
 
                       {appointmentType === "Home Visit" && (
                         <div>
-                          <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Home Address</label>
+                          <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Home Address</label>
                           <input
                             type="text"
                             required
                             placeholder="House, Road, Area, Dhaka"
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
-                            className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm outline-none focus:border-blue-500"
+                            className="w-full bg-[#162044] border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-[#16C9E8]"
                           />
                         </div>
                       )}
 
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Symptoms / Notes (Optional)</label>
+                        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Symptoms / Notes (Optional)</label>
                         <textarea
                           rows={2}
                           placeholder="Brief description of current medical concerns..."
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
-                          className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm outline-none focus:border-blue-500 resize-none"
+                          className="w-full bg-[#162044] border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-[#16C9E8] resize-none"
                         />
                       </div>
 
                       {bookingError && (
-                        <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-semibold">
+                        <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 font-semibold">
                           {bookingError}
                         </div>
                       )}
@@ -492,7 +513,7 @@ export default function DoctorProfilePage() {
                       <button
                         type="submit"
                         disabled={bookingPending || !selectedDate || !selectedTime || !!dateValidationMessage}
-                        className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl text-sm transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3.5 bg-gradient-to-r from-[#16C9E8] to-[#398BF2] hover:opacity-95 text-[#080D23] font-black rounded-xl text-sm transition shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                       >
                         {bookingPending ? "Submitting Booking..." : `Confirm Booking • ৳${appointmentType === "Online Consultation" ? doctor.fee : (doctor.homeVisitFee || doctor.fee + 300)}`}
                       </button>
@@ -506,6 +527,6 @@ export default function DoctorProfilePage() {
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }

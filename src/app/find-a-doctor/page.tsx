@@ -56,61 +56,64 @@ export default function FindADoctorPage() {
     if (isInitial) setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/doctors?sort=${sortKey}`);
+      const res = await fetch("/api/doctors");
       if (!res.ok) {
-        throw new Error("Unable to load verified doctors list.");
+        throw new Error("Failed to load doctors catalog.");
       }
       const data = await res.json();
       if (!isMountedRef.current) return;
 
-      if (Array.isArray(data.doctors)) {
-        setDoctors(data.doctors);
-      }
-      if (data.filterOptions) {
-        if (Array.isArray(data.filterOptions.specialties) && data.filterOptions.specialties.length > 0) {
-          setAllSpecialties(data.filterOptions.specialties);
-        }
-        if (Array.isArray(data.filterOptions.locations) && data.filterOptions.locations.length > 0) {
-          setAllLocations(data.filterOptions.locations);
-        }
-      }
+      const fetchedDoctors: Doctor[] = data.doctors || [];
+      setDoctors(fetchedDoctors);
+
+      // Extract unique specialties and locations dynamically
+      const specialtiesSet = new Set<string>();
+      const locationsSet = new Set<string>();
+
+      fetchedDoctors.forEach((d) => {
+        if (d.specialty) specialtiesSet.add(d.specialty);
+        if (d.location) locationsSet.add(d.location);
+      });
+
+      if (specialtiesSet.size > 0) setAllSpecialties(Array.from(specialtiesSet));
+      if (locationsSet.size > 0) setAllLocations(Array.from(locationsSet));
     } catch (err) {
       if (isMountedRef.current) {
-        setError(err instanceof Error ? err.message : "Failed to load doctors");
+        setError(err instanceof Error ? err.message : "Unable to reach doctors service.");
       }
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
       }
     }
-  }, [sortKey]);
+  }, []);
 
   useEffect(() => {
-    fetchDoctors(doctors.length === 0);
-  }, [fetchDoctors, doctors.length]);
+    fetchDoctors(true);
+  }, [fetchDoctors]);
 
-  /* ── Toggle helpers ──────────────────────────────────────────────────────── */
-  const toggleSpecialty = useCallback((val: string) => {
+  // Toggle filter handlers
+  function toggleSpecialty(specialty: string) {
     setSelectedSpecialties((prev) =>
-      prev.includes(val) ? prev.filter((s) => s !== val) : [...prev, val]
+      prev.includes(specialty) ? prev.filter((s) => s !== specialty) : [...prev, specialty]
     );
-  }, []);
+  }
 
-  const toggleLocation = useCallback((val: string) => {
+  function toggleLocation(location: string) {
     setSelectedLocations((prev) =>
-      prev.includes(val) ? prev.filter((l) => l !== val) : [...prev, val]
+      prev.includes(location) ? prev.filter((l) => l !== location) : [...prev, location]
     );
-  }, []);
+  }
 
-  const clearAll = useCallback(() => {
+  function clearAll() {
     setSelectedSpecialties([]);
     setSelectedLocations([]);
     setQuery("");
-  }, []);
+  }
 
-  /* ── Filtered + sorted doctor list (instant client-side sort & filter) ──── */
+  // Filtered & sorted doctor list
   const filteredDoctors = useMemo(() => {
-    const q = query.toLowerCase().trim();
+    const q = query.trim().toLowerCase();
 
     return doctors
       .filter((d) => {
@@ -144,58 +147,71 @@ export default function FindADoctorPage() {
   const activeFilterCount = selectedSpecialties.length + selectedLocations.length;
 
   return (
-    <>
+    <div className="min-h-screen bg-[#080D23] text-white">
       <Navbar />
 
-      <main className="min-h-screen bg-slate-50">
-        {/* ── Page header ── */}
-        <div className="bg-gradient-to-r from-blue-700 via-indigo-800 to-blue-900 text-white py-12">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="flex items-center gap-2 text-blue-200 text-sm mb-3">
-              <Link href="/" className="hover:text-white transition-colors">Home</Link>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              <span className="text-white">Find a Doctor</span>
+      <main>
+        {/* ── Page Header Banner ── */}
+        <div className="relative overflow-hidden border-b border-white/10 bg-gradient-to-r from-[#170E3A] via-[#111936] to-[#0E2042] py-12">
+          {/* Ambient Glows */}
+          <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#16C9E8]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#DF48C7]/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+            <div className="flex items-center gap-2 text-[#8794AD] text-xs sm:text-sm mb-4">
+              <Link href="/" className="hover:text-[#16C9E8] transition-colors">Home</Link>
+              <span className="text-white/20">/</span>
+              <span className="text-white font-semibold">Find a Doctor</span>
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-4">
+
+            <div className="flex flex-wrap items-center justify-between gap-6">
               <div>
-                <h1 className="text-3xl md:text-4xl font-extrabold mb-2">Find a Doctor</h1>
-                <p className="text-blue-200 text-base md:text-lg max-w-xl">
-                  Connect with BMDC-verified certified medical practitioners for home visits &amp; video consultations.
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#16C9E8]/30 bg-[#16C9E8]/10 px-3 py-1 text-xs font-bold text-[#16C9E8] uppercase tracking-wider mb-3">
+                  <span>✦</span> Clinical Directory
+                </div>
+                <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight">Find a Doctor</h1>
+                <p className="text-[#A2AEC3] text-sm md:text-base max-w-xl mt-2 leading-relaxed">
+                  Connect with BMDC-verified certified medical practitioners for home visits &amp; secure video consultations.
                 </p>
               </div>
-              <div className="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20">
-                <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full" />
-                <span className="text-sm font-semibold text-emerald-300">Live Database Verified</span>
+
+              <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 shadow-xl">
+                <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
+                <div>
+                  <span className="block text-xs font-extrabold text-white">Live BMDC Verification</span>
+                  <span className="block text-[11px] text-emerald-300 font-mono">Real-time Physician Database</span>
+                </div>
               </div>
             </div>
 
-            {/* ── Specialty quick-picks ── */}
+            {/* ── Specialty Quick-Picks ── */}
             {allSpecialties.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-6">
-                {allSpecialties.map((sp) => (
-                  <button
-                    key={sp}
-                    onClick={() => toggleSpecialty(sp)}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
-                      selectedSpecialties.includes(sp)
-                        ? "bg-white text-blue-800 border-white shadow-sm"
-                        : "border-blue-400/60 text-blue-100 hover:border-white hover:text-white"
-                    }`}
-                  >
-                    {sp}
-                  </button>
-                ))}
+              <div className="flex flex-wrap gap-2 mt-8">
+                {allSpecialties.map((sp) => {
+                  const isSelected = selectedSpecialties.includes(sp);
+                  return (
+                    <button
+                      key={sp}
+                      onClick={() => toggleSpecialty(sp)}
+                      className={`text-xs font-bold px-3.5 py-1.5 rounded-full border transition-all ${
+                        isSelected
+                          ? "bg-gradient-to-r from-[#16C9E8] to-[#398BF2] text-[#080D23] border-transparent shadow-lg shadow-cyan-500/20"
+                          : "border-white/15 bg-white/5 text-[#B9C4D7] hover:border-[#16C9E8] hover:text-white"
+                      }`}
+                    >
+                      {sp}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
         </div>
 
-        {/* ── Main content area ── */}
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          {/* ── Search bar ── */}
-          <div className="mb-6">
+        {/* ── Main Content Area ── */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+          {/* ── Search Bar ── */}
+          <div className="mb-8">
             <SearchBar
               value={query}
               onChange={setQuery}
@@ -203,9 +219,9 @@ export default function FindADoctorPage() {
             />
           </div>
 
-          <div className="flex gap-6">
-            {/* ── Filter sidebar (desktop) ── */}
-            <div className="hidden lg:block w-64 shrink-0">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* ── Filter Sidebar (desktop) ── */}
+            <div className="hidden lg:block w-72 shrink-0">
               <FilterSidebar
                 specialties={allSpecialties}
                 locations={allLocations}
@@ -218,45 +234,45 @@ export default function FindADoctorPage() {
               />
             </div>
 
-            {/* ── Doctor grid ── */}
+            {/* ── Doctor Grid Area ── */}
             <div className="flex-1 min-w-0">
-              {/* Sort + Mobile filter toggle bar */}
-              <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
-                {/* Mobile filter button */}
+              {/* Sort + Mobile Filter Toggle Bar */}
+              <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+                {/* Mobile Filter Button */}
                 <button
-                  className="lg:hidden flex items-center gap-2 text-sm font-semibold text-blue-700 bg-white border border-blue-200 px-4 py-2 rounded-xl shadow-sm hover:bg-blue-50 transition-colors"
+                  className="lg:hidden flex items-center gap-2 text-xs font-bold text-[#16C9E8] bg-[#0E1733] border border-white/15 px-4 py-2.5 rounded-xl shadow-md hover:bg-white/5 transition-all"
                   onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707l-6.414 6.414A1 1 0 0014 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.586a1 1 0 00-.293-.707L1.293 6.707A1 1 0 011 6V4z" />
                   </svg>
-                  Filters
+                  Filter Doctors
                   {activeFilterCount > 0 && (
-                    <span className="bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                    <span className="bg-[#16C9E8] text-[#080D23] text-xs font-black w-5 h-5 rounded-full flex items-center justify-center">
                       {activeFilterCount}
                     </span>
                   )}
                 </button>
 
-                {/* Sort dropdown */}
+                {/* Sort Dropdown */}
                 <div className="flex items-center gap-2 ml-auto">
-                  <label className="text-sm text-slate-500 shrink-0">Sort by:</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#8794AD] shrink-0">Sort by:</label>
                   <select
                     value={sortKey}
                     onChange={(e) => setSortKey(e.target.value as SortKey)}
-                    className="text-sm font-semibold text-slate-700 border-2 border-slate-200 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-blue-400 cursor-pointer"
+                    className="text-xs font-bold text-white border border-white/15 rounded-xl px-3.5 py-2.5 bg-[#162044] focus:outline-none focus:border-[#16C9E8] cursor-pointer"
                   >
                     {SORT_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      <option key={opt.value} value={opt.value} className="bg-[#162044] text-white">{opt.label}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              {/* Mobile filter panel */}
+              {/* Mobile Filter Panel */}
               {mobileFiltersOpen && (
-                <div className="lg:hidden mb-5">
+                <div className="lg:hidden mb-6">
                   <FilterSidebar
                     specialties={allSpecialties}
                     locations={allLocations}
@@ -270,16 +286,16 @@ export default function FindADoctorPage() {
                 </div>
               )}
 
-              {/* Active filter chips */}
+              {/* Active Filter Chips */}
               {activeFilterCount > 0 && (
-                <div className="flex flex-wrap gap-2 mb-5">
+                <div className="flex flex-wrap gap-2 mb-6">
                   {selectedSpecialties.map((sp) => (
                     <span
                       key={sp}
-                      className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-full"
+                      className="inline-flex items-center gap-1.5 bg-[#16C9E8]/10 text-[#16C9E8] border border-[#16C9E8]/30 text-xs font-bold px-3 py-1.5 rounded-full"
                     >
                       {sp}
-                      <button onClick={() => toggleSpecialty(sp)} className="hover:text-blue-900">
+                      <button onClick={() => toggleSpecialty(sp)} className="hover:text-white transition">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -289,10 +305,10 @@ export default function FindADoctorPage() {
                   {selectedLocations.map((loc) => (
                     <span
                       key={loc}
-                      className="inline-flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full"
+                      className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-xs font-bold px-3 py-1.5 rounded-full"
                     >
                       📍 {loc}
-                      <button onClick={() => toggleLocation(loc)} className="hover:text-green-900">
+                      <button onClick={() => toggleLocation(loc)} className="hover:text-white transition">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -302,23 +318,23 @@ export default function FindADoctorPage() {
                 </div>
               )}
 
-              {/* Initial Loading Skeleton (only on very first load when zero doctors exist) */}
+              {/* Initial Loading Skeleton */}
               {isLoading && doctors.length === 0 && (
-                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {[1, 2, 3, 4, 5, 6].map((n) => (
-                    <div key={n} className="bg-white rounded-2xl border border-slate-100 p-6 animate-pulse">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-16 h-16 bg-slate-200 rounded-2xl" />
+                <div className="grid sm:grid-cols-2 xl:grid-cols-2 gap-6">
+                  {[1, 2, 3, 4].map((n) => (
+                    <div key={n} className="rounded-3xl border border-white/10 bg-[#0E1733] p-6 animate-pulse space-y-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-white/10 rounded-2xl" />
                         <div className="flex-1 space-y-2">
-                          <div className="h-4 bg-slate-200 rounded w-3/4" />
-                          <div className="h-3 bg-slate-100 rounded w-1/2" />
+                          <div className="h-4 bg-white/10 rounded w-3/4" />
+                          <div className="h-3 bg-white/5 rounded w-1/2" />
                         </div>
                       </div>
                       <div className="space-y-2 py-4">
-                        <div className="h-3 bg-slate-100 rounded w-full" />
-                        <div className="h-3 bg-slate-100 rounded w-5/6" />
+                        <div className="h-3 bg-white/5 rounded w-full" />
+                        <div className="h-3 bg-white/5 rounded w-5/6" />
                       </div>
-                      <div className="h-10 bg-slate-200 rounded-xl mt-4" />
+                      <div className="h-10 bg-white/10 rounded-xl mt-4" />
                     </div>
                   ))}
                 </div>
@@ -326,49 +342,50 @@ export default function FindADoctorPage() {
 
               {/* Error State */}
               {!isLoading && error && doctors.length === 0 && (
-                <div className="bg-white rounded-2xl border border-red-100 shadow-sm py-16 text-center p-6">
-                  <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="rounded-3xl border border-rose-500/20 bg-[#0E1733] py-16 text-center p-6 shadow-2xl">
+                  <div className="w-16 h-16 bg-rose-500/10 text-rose-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-slate-800 mb-2">Unable to Load Doctors</h3>
-                  <p className="text-slate-500 text-sm mb-6 max-w-sm mx-auto">{error}</p>
+                  <h3 className="text-xl font-bold text-white mb-2">Unable to Load Doctors</h3>
+                  <p className="text-[#A2AEC3] text-sm mb-6 max-w-sm mx-auto">{error}</p>
                   <button
                     onClick={() => fetchDoctors(true)}
-                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-6 py-2.5 rounded-xl shadow-sm transition"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-[#16C9E8] to-[#398BF2] text-[#080D23] font-black text-xs px-6 py-3 rounded-xl shadow-lg shadow-cyan-500/20 hover:opacity-95 transition"
                   >
                     Retry Connection
                   </button>
                 </div>
               )}
 
-              {/* Grid or Empty */}
+              {/* Doctors Grid */}
               {filteredDoctors.length > 0 && (
-                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid sm:grid-cols-2 gap-6">
                   {filteredDoctors.map((doctor, idx) => (
                     <DoctorCard key={String(doctor.id)} doctor={doctor} index={idx} />
                   ))}
                 </div>
               )}
 
+              {/* Empty State */}
               {!isLoading && filteredDoctors.length === 0 && (
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm py-20 text-center">
-                  <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-5">
-                    <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="rounded-3xl border border-white/10 bg-[#0E1733] py-20 text-center shadow-xl p-6">
+                  <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-5 text-[#8794AD]">
+                    <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                         d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-slate-700 mb-2">No verified doctors found</h3>
-                  <p className="text-slate-500 text-sm mb-5 max-w-xs mx-auto">
-                    Try adjusting your search query or clearing the active filters.
+                  <h3 className="text-xl font-bold text-white mb-2">No verified doctors found</h3>
+                  <p className="text-[#A2AEC3] text-sm mb-6 max-w-xs mx-auto">
+                    Try adjusting your search keywords or resetting your active filters.
                   </p>
                   <button
                     onClick={clearAll}
-                    className="text-sm font-semibold text-blue-600 border-2 border-blue-200 px-5 py-2 rounded-full hover:bg-blue-50 transition-colors"
+                    className="text-xs font-bold text-[#16C9E8] border border-[#16C9E8]/30 bg-[#16C9E8]/10 px-6 py-2.5 rounded-full hover:bg-[#16C9E8]/20 transition-all"
                   >
-                    Clear all filters
+                    Clear All Filters
                   </button>
                 </div>
               )}
@@ -378,6 +395,6 @@ export default function FindADoctorPage() {
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }
