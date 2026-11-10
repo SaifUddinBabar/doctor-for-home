@@ -14,8 +14,8 @@ yarn-error.log*
 
 .vercel
 /data/users.json
-*.db
+# Allow seed database for demo deployment
+!prisma/dev.db
 *.db-journal
 *.db-wal
 *.db-shm
-dev.db
